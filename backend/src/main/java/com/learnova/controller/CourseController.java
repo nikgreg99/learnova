@@ -3,6 +3,7 @@ package com.learnova.controller;
 import com.learnova.dto.CourseRequest;
 import com.learnova.dto.CourseResponse;
 import com.learnova.service.CourseService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,13 +31,13 @@ public class CourseController {
     @PutMapping("/courses/{id}")
     public ResponseEntity<?> updateCourse
             (@PathVariable Long id,
-             @RequestBody CourseRequest courseRequest){
+             @RequestBody @Valid CourseRequest courseRequest){
         var course = courseService.updateCourse(id, courseRequest);
         return  course.isPresent() ? ResponseEntity.ok(course.get()) : ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 
     @PostMapping("/courses")
-    public ResponseEntity<CourseResponse> addCourse(@RequestBody CourseRequest course){
+    public ResponseEntity<CourseResponse> addCourse(@RequestBody @Valid CourseRequest course){
       var createdCourse = courseService.addCourse(course);
       return ResponseEntity.status(HttpStatus.CREATED).body(createdCourse);
     }
