@@ -3,7 +3,7 @@ package com.learnova.service;
 import com.learnova.dto.CourseRequest;
 import com.learnova.dto.CourseResponse;
 import com.learnova.mapper.CourseMapper;
-import com.learnova.repoository.CourseRepository;
+import com.learnova.repository.CourseRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -43,7 +43,7 @@ public class CourseService {
                 .findById(courseId)
                 .map(course ->  {
                     courseMapper.updateCourse(courseRequest,course);
-                    var updatedCourse = courseRepository.save(courseMapper.toEntity(courseRequest));
+                    var updatedCourse = courseRepository.save(course);
                     return courseMapper.toResponse(updatedCourse);
                 });
     }

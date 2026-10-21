@@ -1,7 +1,8 @@
 package com.learnova.config;
 
 import com.learnova.model.Course;
-import com.learnova.repoository.CourseRepository;
+import com.learnova.repository.CourseRepository;
+
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
