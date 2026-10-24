@@ -2,10 +2,9 @@ package com.learnova.service;
 
 import com.learnova.dto.CourseRequest;
 import com.learnova.dto.CourseResponse;
+import com.learnova.exception.CourseNotFoundException;
 import com.learnova.mapper.CourseMapper;
 import com.learnova.repoository.CourseRepository;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,10 +13,13 @@ import java.util.Optional;
 @Service
 public class CourseService {
 
-    @Autowired
-    private CourseRepository courseRepository;
-    @Autowired
-    private CourseMapper courseMapper;
+    private final CourseRepository courseRepository;
+    private final CourseMapper courseMapper;
+
+    public CourseService(CourseRepository courseRepository, CourseMapper courseMapper) {
+        this.courseRepository = courseRepository;
+        this.courseMapper = courseMapper;
+    }
 
     public List<CourseResponse> getCourses(){
         return courseRepository.findAll()
@@ -26,10 +28,11 @@ public class CourseService {
                 .toList();
     }
 
-    public Optional<CourseResponse> getCourseById(Long id) {
+    public CourseResponse getCourseById(Long id) {
         return courseRepository
                 .findById(id)
-                .map(courseMapper::toResponse);
+                .map(courseMapper::toResponse)
+                .orElseThrow(()-> new CourseNotFoundException(id));
     }
 
     public CourseResponse addCourse(CourseRequest courseRequest) {
@@ -43,14 +46,18 @@ public class CourseService {
                 .findById(courseId)
                 .map(course ->  {
                     courseMapper.updateCourse(courseRequest,course);
-                    var updatedCourse = courseRepository.save(courseMapper.toEntity(courseRequest));
+                    var updatedCourse = courseRepository.save(course);
                     return courseMapper.toResponse(updatedCourse);
                 });
     }
 
-    public void deleteCourseById(Long id) {
+    public boolean deleteCourseById(Long id) {
+
+        if(!courseRepository.existsById(id)){
+            return false;
+        }
+
         courseRepository.deleteById(id);
+        return true;
     }
-
-
 }
