@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 public class CourseController {
@@ -23,7 +24,7 @@ public class CourseController {
     }
 
     @GetMapping("/courses/{id}")
-    public ResponseEntity<CourseResponse> getCourse(@PathVariable Long id){
+    public ResponseEntity<Optional<CourseResponse>> getCourse(@PathVariable Long id){
         return ResponseEntity.ok(courseService.getCourseById(id));
     }
 
@@ -45,12 +46,7 @@ public class CourseController {
 
     @DeleteMapping("/courses/{id}")
     public ResponseEntity<Void> deleteCourse(@PathVariable Long id){
-        var deleted = courseService.deleteCourseById(id);
-
-        if(!deleted){
-            return ResponseEntity.notFound().build();
-        }
-
+        courseService.deleteCourseById(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
