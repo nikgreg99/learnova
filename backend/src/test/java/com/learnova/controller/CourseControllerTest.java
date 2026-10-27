@@ -21,10 +21,10 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.learnova.dto.CourseRequest;
 import com.learnova.dto.CourseResponse;
 import com.learnova.service.CourseService;
+import tools.jackson.databind.json.JsonMapper;
 
 @WebMvcTest(CourseController.class)
 public class CourseControllerTest {
@@ -32,7 +32,7 @@ public class CourseControllerTest {
     @Autowired
     private MockMvc mockMvc;
     @Autowired
-    private ObjectMapper objectMapper;
+    private JsonMapper objectMapper;
     @MockitoBean
     private CourseService courseService;
 
