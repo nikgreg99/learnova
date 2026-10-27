@@ -45,14 +45,12 @@ class CourseServiceTest {
                 courseId,
                 "Java Fundamentals",
                 "Introduction to Java",
-                "49.90"
-        );
+                "49.90");
 
         courseRequest = new CourseRequest(
                 "Advanced Java",
                 "Advanced Java concepts",
-                new BigDecimal("59.90")
-        );
+                new BigDecimal("59.90"));
 
         courseResponse = new CourseResponse(
                 courseId,
@@ -60,17 +58,10 @@ class CourseServiceTest {
                 courseRequest.description(),
                 courseRequest.price(),
                 null,
-                null
-        );
+                null);
     }
 
-
-    private Course createCourse(
-            Long id,
-            String name,
-            String description,
-            String price
-    ) {
+    private Course createCourse(Long id, String name, String description, String price) {
         Course course = new Course();
         course.setId(id);
         course.setName(name);
@@ -85,8 +76,7 @@ class CourseServiceTest {
                 2L,
                 "Spring Boot Essentials",
                 "Learn Spring Boot",
-                "79.90"
-        );
+                "79.90");
 
         CourseResponse secondResponse = new CourseResponse(
                 2L,
@@ -94,22 +84,16 @@ class CourseServiceTest {
                 "Learn Spring Boot",
                 new BigDecimal("79.90"),
                 null,
-                null
-        );
+                null);
 
-        when(courseRepository.findAll()).
-                thenReturn(List.of(course,secondCourse));
-
-        when(courseMapper.toResponse(course)).
-                thenReturn(courseResponse);
-
-        when(courseMapper.toResponse(secondCourse)).
-                thenReturn(secondResponse);
+        when(courseRepository.findAll()).thenReturn(List.of(course, secondCourse));
+        when(courseMapper.toResponse(course)).thenReturn(courseResponse);
+        when(courseMapper.toResponse(secondCourse)).thenReturn(secondResponse);
 
         var result = courseService.getCourses();
 
         assertEquals(2, result.size());
-        assertEquals(List.of(courseResponse,secondResponse), result);
+        assertEquals(List.of(courseResponse, secondResponse), result);
 
         verify(courseRepository).findAll();
         verify(courseMapper).toResponse(course);
@@ -118,8 +102,7 @@ class CourseServiceTest {
 
     @Test
     void shouldReturnEmptyListWhenNoCourseExists() {
-        when(courseRepository.findAll())
-                .thenReturn(List.of());
+        when(courseRepository.findAll()).thenReturn(List.of());
 
         var result = courseService.getCourses();
 
@@ -127,16 +110,12 @@ class CourseServiceTest {
 
         verify(courseRepository).findAll();
         verifyNoInteractions(courseMapper);
-
     }
 
     @Test
     void shouldReturnCourseWhenCourseExists() {
-        when(courseRepository.findById(courseId))
-                .thenReturn(Optional.of(course));
-
-        when(courseMapper.toResponse(course))
-                .thenReturn(courseResponse);
+        when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+        when(courseMapper.toResponse(course)).thenReturn(courseResponse);
 
         var result = courseService.getCourseById(courseId);
 
@@ -149,8 +128,7 @@ class CourseServiceTest {
 
     @Test
     void shouldReturnEmptyWhenCourseDoesNotExist() {
-        when(courseRepository.findById(courseId))
-                .thenReturn(Optional.empty());
+        when(courseRepository.findById(courseId)).thenReturn(Optional.empty());
 
         var result = courseService.getCourseById(courseId);
 
@@ -162,21 +140,11 @@ class CourseServiceTest {
 
     @Test
     void shouldAddCourse() {
-        Course newCourse = createCourse(
-                courseId,
-                courseRequest.name(),
-                courseRequest.description(),
-                "59.90"
-        );
+        Course newCourse = createCourse(courseId, courseRequest.name(), courseRequest.description(), "59.90");
 
-        when(courseMapper.toEntity(courseRequest))
-                .thenReturn(newCourse);
-
-        when(courseRepository.save(newCourse))
-                .thenReturn(newCourse);
-
-        when(courseMapper.toResponse(newCourse))
-                .thenReturn(courseResponse);
+        when(courseMapper.toEntity(courseRequest)).thenReturn(newCourse);
+        when(courseRepository.save(newCourse)).thenReturn(newCourse);
+        when(courseMapper.toResponse(newCourse)).thenReturn(courseResponse);
 
         var result = courseService.addCourse(courseRequest);
 
@@ -189,12 +157,9 @@ class CourseServiceTest {
 
     @Test
     void shouldDeleteCourseWhenCourseExists() {
-        when(courseRepository.existsById(courseId))
-                .thenReturn(true);
+        when(courseRepository.existsById(courseId)).thenReturn(true);
 
-        assertDoesNotThrow(
-                () -> courseService.deleteCourseById(courseId)
-        );
+        assertDoesNotThrow(() -> courseService.deleteCourseById(courseId));
 
         verify(courseRepository).existsById(courseId);
         verify(courseRepository).deleteById(courseId);
@@ -202,13 +167,9 @@ class CourseServiceTest {
 
     @Test
     void shouldThrowExceptionWhenDeletingNonExistingCourse() {
-        when(courseRepository.existsById(courseId))
-                .thenReturn(false);
+        when(courseRepository.existsById(courseId)).thenReturn(false);
 
-        assertThrows(
-                CourseNotFoundException.class,
-                () -> courseService.deleteCourseById(courseId)
-        );
+        assertThrows(CourseNotFoundException.class, () -> courseService.deleteCourseById(courseId));
 
         verify(courseRepository).existsById(courseId);
         verify(courseRepository, never()).deleteById(courseId);
@@ -216,21 +177,11 @@ class CourseServiceTest {
 
     @Test
     void shouldUpdateCourseWhenCourseExists() {
-        Course updatedCourse = createCourse(
-                courseId,
-                courseRequest.name(),
-                courseRequest.description(),
-                "59.90"
-        );
+        Course updatedCourse = createCourse(courseId, courseRequest.name(), courseRequest.description(), "59.90");
 
-        when(courseRepository.findById(courseId))
-                .thenReturn(Optional.of(course));
-
-        when(courseRepository.save(course))
-                .thenReturn(updatedCourse);
-
-        when(courseMapper.toResponse(updatedCourse))
-                .thenReturn(courseResponse);
+        when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+        when(courseRepository.save(course)).thenReturn(updatedCourse);
+        when(courseMapper.toResponse(updatedCourse)).thenReturn(courseResponse);
 
         var result = courseService.updateCourse(courseId, courseRequest);
 
@@ -245,8 +196,7 @@ class CourseServiceTest {
 
     @Test
     void shouldReturnEmptyWhenUpdatingNonExistingCourse() {
-        when(courseRepository.findById(courseId))
-                .thenReturn(Optional.empty());
+        when(courseRepository.findById(courseId)).thenReturn(Optional.empty());
 
         var result = courseService.updateCourse(courseId, courseRequest);
 
