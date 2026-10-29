@@ -5,8 +5,9 @@ import com.learnova.dto.CourseResponse;
 import com.learnova.model.Course;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.ReportingPolicy;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface CourseMapper {
 
     Course toEntity(CourseRequest courseRequest);

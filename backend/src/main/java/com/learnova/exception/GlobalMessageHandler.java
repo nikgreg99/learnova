@@ -33,7 +33,7 @@ public class GlobalMessageHandler {
         return buildError(HttpStatus.NOT_FOUND, message, request);
     }
 
-    @ExceptionHandler(Exception.class)
+
     private ResponseEntity<ApiError> buildError(
             HttpStatus httpStatus,
             String message,
