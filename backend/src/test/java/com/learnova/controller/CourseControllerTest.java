@@ -14,6 +14,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -36,23 +37,34 @@ public class CourseControllerTest {
     @MockitoBean
     private CourseService courseService;
 
-    @Test
-    void shouldReturnCoursesWhenCoursesExist() throws Exception {
-        CourseResponse response = new CourseResponse(
-                1L,
+    private CourseRequest courseRequest;
+    private CourseResponse courseResponse;
+
+    @BeforeEach
+    void setUp() {
+        courseRequest = new CourseRequest(
                 "Java Fundamentals",
                 "Introduction to Java",
-                new BigDecimal("49.90"),
+                new BigDecimal("49.90"));
+
+        courseResponse = new CourseResponse(
+                1L,
+                courseRequest.name(),
+                courseRequest.description(),
+                courseRequest.price(),
                 null,
                 null);
+    }
 
-        when(courseService.getCourses()).thenReturn(List.of(response));
+    @Test
+    void shouldReturnCoursesWhenCoursesExist() throws Exception {
+        when(courseService.getCourses()).thenReturn(List.of(courseResponse));
 
         mockMvc.perform(get("/courses"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].name").value("Java Fundamentals"));
+                .andExpect(jsonPath("$[0].name").value(courseResponse.name()));
     }
 
     @Test
@@ -67,68 +79,45 @@ public class CourseControllerTest {
 
     @Test
     void shouldReturnCourseWhenCourseExists() throws Exception {
-        CourseResponse response = new CourseResponse(
-                1L,
-                "Java Fundamentals",
-                "Introduction to Java",
-                new BigDecimal("49.90"),
-                null,
-                null);
+        when(courseService.getCourseById(courseResponse.id())).thenReturn(Optional.of(courseResponse));
 
-        when(courseService.getCourseById(response.id())).thenReturn(Optional.of(response));
-
-        mockMvc.perform(get("/courses/{id}", response.id()))
+        mockMvc.perform(get("/courses/{id}", courseResponse.id()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(response.id()))
-                .andExpect(jsonPath("$.name").value("Java Fundamentals"));
+                .andExpect(jsonPath("$.id").value(courseResponse.id()))
+                .andExpect(jsonPath("$.name").value(courseResponse.name()));
     }
 
     @Test
     void shouldReturnNotFoundWhenCourseDoesNotExist() throws Exception {
-        Long nonExistingId = 1L;
-
+        Long nonExistingId = 999L;
         when(courseService.getCourseById(nonExistingId)).thenReturn(Optional.empty());
+
         mockMvc.perform(get("/courses/{id}", nonExistingId))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     void shouldCreateCourseWhenRequestIsValid() throws Exception {
-
-        CourseRequest request = new CourseRequest(
-                "Java Fundamentals",
-                "Introduction to Java",
-                new BigDecimal("49.90"));
-
-        CourseResponse response = new CourseResponse(
-                1L,
-                "Java Fundamentals",
-                "Introduction to Java",
-                new BigDecimal("49.90"),
-                null,
-                null);
-
-        when(courseService.addCourse(request)).thenReturn(response);
+        when(courseService.addCourse(courseRequest)).thenReturn(courseResponse);
 
         mockMvc.perform(post("/courses")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                .content(objectMapper.writeValueAsString(courseRequest)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.name").value(request.name()));
+                .andExpect(jsonPath("$.id").value(courseResponse.id()))
+                .andExpect(jsonPath("$.name").value(courseRequest.name()));
     }
 
     @Test
     void shouldReturnBadRequestWhenRequestIsInvalid() throws Exception {
-
-        CourseRequest request = new CourseRequest(
+        CourseRequest invalidRequest = new CourseRequest(
                 "",
                 "Introduction to Java",
                 new BigDecimal("49.90"));
 
         mockMvc.perform(post("/courses")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest());
 
         verifyNoInteractions(courseService);
@@ -136,62 +125,31 @@ public class CourseControllerTest {
 
     @Test
     void shouldUpdateCourseWhenCourseExists() throws Exception {
+        when(courseService.updateCourse(courseResponse.id(), courseRequest)).thenReturn(Optional.of(courseResponse));
 
-        CourseRequest request = new CourseRequest(
-                "Java Fundamentals",
-                "Introduction to Java",
-                new BigDecimal("49.90"));
-
-        CourseResponse response = new CourseResponse(
-                1L,
-                "Java Fundamentals",
-                "Introduction to Java",
-                new BigDecimal("49.90"),
-                null,
-                null);
-
-        when(courseService.updateCourse(response.id(), request)).thenReturn(Optional.of(response));
-
-        mockMvc.perform(put("/courses/{id}", response.id())
+        mockMvc.perform(put("/courses/{id}", courseResponse.id())
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                .content(objectMapper.writeValueAsString(courseRequest)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(response.id()))
-                .andExpect(jsonPath("$.name").value(response.name()));
+                .andExpect(jsonPath("$.id").value(courseResponse.id()))
+                .andExpect(jsonPath("$.name").value(courseResponse.name()));
     }
 
     @Test
     void shouldReturnNotFoundWhenUpdatingNonExistingCourse() throws Exception {
+        when(courseService.updateCourse(courseResponse.id(), courseRequest)).thenReturn(Optional.empty());
 
-        CourseRequest request = new CourseRequest(
-                "Java Fundamentals",
-                "Introduction to Java",
-                new BigDecimal("49.90"));
-
-        CourseResponse response = new CourseResponse(
-                1L,
-                "Java Fundamentals",
-                "Introduction to Java",
-                new BigDecimal("49.90"),
-                null,
-                null);
-
-        when(courseService.updateCourse(response.id(), request)).thenReturn(Optional.empty());
-
-        mockMvc.perform(put("/courses/{id}", response.id())
+        mockMvc.perform(put("/courses/{id}", courseResponse.id())
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                .content(objectMapper.writeValueAsString(courseRequest)))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     void shouldDeleteCourseWhenCourseExists() throws Exception {
-
-        Long courseId = 1L;
-
-        mockMvc.perform(delete("/courses/{id}", courseId))
+        mockMvc.perform(delete("/courses/{id}", courseResponse.id()))
                 .andExpect(status().isNoContent());
 
-        verify(courseService).deleteCourseById(courseId);
+        verify(courseService).deleteCourseById(courseResponse.id());
     }
 }

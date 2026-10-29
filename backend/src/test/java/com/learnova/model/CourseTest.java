@@ -18,10 +18,7 @@ public class CourseTest {
 
         assertEquals("Java Fundamentals", course.getName());
         assertEquals("Introduction to Java", course.getDescription());
-        assertEquals(
-                0,
-                new BigDecimal("49.90").compareTo(course.getPrice())
-        );
+        assertEquals(0, new BigDecimal("49.90").compareTo(course.getPrice()));
 
         assertNull(course.getId());
         assertNull(course.getCreatedAt());
