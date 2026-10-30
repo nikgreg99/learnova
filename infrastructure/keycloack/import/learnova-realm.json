@@ -1,0 +1,36 @@
+{
+  "realm": "learnova",
+  "enabled": true,
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": false,
+  "roles": {
+    "realm": [
+      {
+        "name": "STUDENT",
+        "description": "Can access learning resources"
+      },
+      {
+        "name": "INSTRUCTOR",
+        "description": "Can manage courses"
+      },
+      {
+        "name": "ADMIN",
+        "description": "Can manage the platform"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "learnova-backend",
+      "name": "Learnova Backend",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "directAccessGrantsEnabled": true,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "serviceAccountsEnabled": false,
+      "authorizationServicesEnabled": false
+    }
+  ]
+}

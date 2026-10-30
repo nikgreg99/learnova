@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@RequestMapping("/api/courses")
 public class CourseController {
 
     private final CourseService courseService;
@@ -19,19 +20,19 @@ public class CourseController {
         this.courseService = courseService;
     }
 
-    @GetMapping("/courses")
+    @GetMapping
     public ResponseEntity<List<CourseResponse>> getCourses(){
         return ResponseEntity.ok(courseService.getCourses());
     }
 
-    @GetMapping("/courses/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<CourseResponse> getCourse(@PathVariable Long id){
         return courseService.getCourseById(id)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @PutMapping("/courses/{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<CourseResponse> updateCourse
             (@PathVariable Long id,
              @RequestBody @Valid CourseRequest courseRequest){
@@ -41,13 +42,13 @@ public class CourseController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @PostMapping("/courses")
+    @PostMapping
     public ResponseEntity<CourseResponse> addCourse(@RequestBody @Valid CourseRequest course){
       var createdCourse = courseService.addCourse(course);
       return ResponseEntity.status(HttpStatus.CREATED).body(createdCourse);
     }
 
-    @DeleteMapping("/courses/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCourse(@PathVariable Long id){
         courseService.deleteCourseById(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
