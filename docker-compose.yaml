@@ -9,7 +9,6 @@ services:
       POSTGRES_DB: ${DB_NAME:?DB_NAME is required}
       POSTGRES_USER: ${DB_USER:?DB_USER is required}
       POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
-
       KEYCLOAK_DB_NAME: ${KEYCLOAK_DB_NAME:?KEYCLOAK_DB_NAME is required}
       KEYCLOAK_DB_USER: ${KEYCLOAK_DB_USER:?KEYCLOAK_DB_USER is required}
       KEYCLOAK_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?KEYCLOAK_DB_PASSWORD is required}
@@ -22,9 +21,7 @@ services:
       - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
 
     healthcheck:
-      test:
-        - CMD-SHELL
-        - pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -42,12 +39,10 @@ services:
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:?KEYCLOAK_ADMIN is required}
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?KEYCLOAK_ADMIN_PASSWORD is required}
-
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://postgres:5432/${KEYCLOAK_DB_NAME:?KEYCLOAK_DB_NAME is required}
       KC_DB_USERNAME: ${KEYCLOAK_DB_USER:?KEYCLOAK_DB_USER is required}
       KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?KEYCLOAK_DB_PASSWORD is required}
-
       KC_HEALTH_ENABLED: "true"
       KC_HOSTNAME: ${KEYCLOAK_HOSTNAME:-localhost}
       KC_HTTP_ENABLED: ${KEYCLOAK_HTTP_ENABLED:-true}
@@ -60,12 +55,7 @@ services:
         condition: service_healthy
 
     healthcheck:
-      test:
-        - CMD-SHELL
-        - >
-          exec 3<>/dev/tcp/127.0.0.1/9000 &&
-          echo -e 'GET /health/ready HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n' >&3 &&
-          grep -q '200 OK' <&3
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000 && echo -e 'GET /health/ready HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n' >&3 && grep -q '200 OK' <&3"]
       interval: 10s
       timeout: 5s
       retries: 15
@@ -82,11 +72,9 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: docker
       SERVER_PORT: 8080
-
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${DB_NAME:?DB_NAME is required}
       SPRING_DATASOURCE_USERNAME: ${DB_USER:?DB_USER is required}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
-
       KEYCLOAK_ISSUER_URI: http://localhost:8081/realms/learnova
       KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/learnova/protocol/openid-connect/certs
 

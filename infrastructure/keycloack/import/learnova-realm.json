@@ -32,5 +32,26 @@
       "serviceAccountsEnabled": false,
       "authorizationServicesEnabled": false
     }
+  ],
+  "users": [
+    {
+      "username": "test-student",
+      "enabled": true,
+      "email": "test-student@learnova.local",
+      "emailVerified": true,
+      "firstName": "Test",
+      "lastName": "Student",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "LearnovaLocal123!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "STUDENT"
+      ],
+      "requiredActions": []
+    }
   ]
 }

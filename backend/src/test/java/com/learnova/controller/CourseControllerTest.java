@@ -60,7 +60,7 @@ public class CourseControllerTest {
     void shouldReturnCoursesWhenCoursesExist() throws Exception {
         when(courseService.getCourses()).thenReturn(List.of(courseResponse));
 
-        mockMvc.perform(get("/courses"))
+        mockMvc.perform(get("/api/courses"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$.length()").value(1))
@@ -71,7 +71,7 @@ public class CourseControllerTest {
     void shouldReturnEmptyListWhenNoCoursesExist() throws Exception {
         when(courseService.getCourses()).thenReturn(List.of());
 
-        mockMvc.perform(get("/courses"))
+        mockMvc.perform(get("/api/courses"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$.length()").value(0));
@@ -81,7 +81,7 @@ public class CourseControllerTest {
     void shouldReturnCourseWhenCourseExists() throws Exception {
         when(courseService.getCourseById(courseResponse.id())).thenReturn(Optional.of(courseResponse));
 
-        mockMvc.perform(get("/courses/{id}", courseResponse.id()))
+        mockMvc.perform(get("/api/courses/{id}", courseResponse.id()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(courseResponse.id()))
                 .andExpect(jsonPath("$.name").value(courseResponse.name()));
@@ -92,7 +92,7 @@ public class CourseControllerTest {
         Long nonExistingId = 999L;
         when(courseService.getCourseById(nonExistingId)).thenReturn(Optional.empty());
 
-        mockMvc.perform(get("/courses/{id}", nonExistingId))
+        mockMvc.perform(get("/api/courses/{id}", nonExistingId))
                 .andExpect(status().isNotFound());
     }
 
@@ -100,7 +100,7 @@ public class CourseControllerTest {
     void shouldCreateCourseWhenRequestIsValid() throws Exception {
         when(courseService.addCourse(courseRequest)).thenReturn(courseResponse);
 
-        mockMvc.perform(post("/courses")
+        mockMvc.perform(post("/api/courses")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(courseRequest)))
                 .andExpect(status().isCreated())
@@ -115,7 +115,7 @@ public class CourseControllerTest {
                 "Introduction to Java",
                 new BigDecimal("49.90"));
 
-        mockMvc.perform(post("/courses")
+        mockMvc.perform(post("/api/courses")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest());
@@ -127,7 +127,7 @@ public class CourseControllerTest {
     void shouldUpdateCourseWhenCourseExists() throws Exception {
         when(courseService.updateCourse(courseResponse.id(), courseRequest)).thenReturn(Optional.of(courseResponse));
 
-        mockMvc.perform(put("/courses/{id}", courseResponse.id())
+        mockMvc.perform(put("/api/courses/{id}", courseResponse.id())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(courseRequest)))
                 .andExpect(status().isOk())
@@ -139,7 +139,7 @@ public class CourseControllerTest {
     void shouldReturnNotFoundWhenUpdatingNonExistingCourse() throws Exception {
         when(courseService.updateCourse(courseResponse.id(), courseRequest)).thenReturn(Optional.empty());
 
-        mockMvc.perform(put("/courses/{id}", courseResponse.id())
+        mockMvc.perform(put("/api/courses/{id}", courseResponse.id())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(courseRequest)))
                 .andExpect(status().isNotFound());
@@ -147,7 +147,7 @@ public class CourseControllerTest {
 
     @Test
     void shouldDeleteCourseWhenCourseExists() throws Exception {
-        mockMvc.perform(delete("/courses/{id}", courseResponse.id()))
+        mockMvc.perform(delete("/api/courses/{id}", courseResponse.id()))
                 .andExpect(status().isNoContent());
 
         verify(courseService).deleteCourseById(courseResponse.id());
