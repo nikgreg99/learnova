@@ -1,4 +1,4 @@
-package com.learnova.dto;
+package com.learnova.dto.error;
 
 import java.time.Instant;
 

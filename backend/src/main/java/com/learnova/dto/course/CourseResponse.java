@@ -1,4 +1,4 @@
-package com.learnova.dto;
+package com.learnova.dto.course;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

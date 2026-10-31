@@ -1,6 +1,6 @@
 package com.learnova.exception;
 
-import com.learnova.dto.ApiError;
+import com.learnova.dto.error.ApiError;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;

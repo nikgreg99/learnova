@@ -3,7 +3,6 @@ spring:
   application:
     name: ${APP_NAME:learnova}
 
-
   jpa:
     database: POSTGRESQL
     hibernate:
@@ -20,4 +19,18 @@ spring:
     baseline-on-migrate: false
     validate-on-migrate: true
 
+server:
+  port: ${APP_PORT:8080}
 
+keycloak:
+  base-url: ${KEYCLOAK_BASE_URL:http://localhost:8081}
+  realm: ${KEYCLOAK_REALM:learnova}
+
+  admin:
+    client-id: ${KEYCLOAK_ADMIN_CLIENT_ID}
+    client-secret: ${KEYCLOAK_ADMIN_CLIENT_SECRET}
+
+logging:
+  level:
+    org.springframework.security: INFO
+    org.hibernate.SQL: INFO

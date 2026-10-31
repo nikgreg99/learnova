@@ -1,8 +1,10 @@
+
 {
   "realm": "learnova",
   "enabled": true,
   "registrationAllowed": false,
   "loginWithEmailAllowed": false,
+
   "roles": {
     "realm": [
       {
@@ -19,6 +21,7 @@
       }
     ]
   },
+
   "clients": [
     {
       "clientId": "learnova-backend",
@@ -26,13 +29,48 @@
       "enabled": true,
       "protocol": "openid-connect",
       "publicClient": true,
-      "directAccessGrantsEnabled": true,
+      "directAccessGrantsEnabled": false,
       "standardFlowEnabled": false,
       "implicitFlowEnabled": false,
       "serviceAccountsEnabled": false,
       "authorizationServicesEnabled": false
+    },
+    {
+      "clientId": "learnova-postman",
+      "name": "Learnova Postman",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "directAccessGrantsEnabled": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "serviceAccountsEnabled": false,
+      "authorizationServicesEnabled": false,
+      "redirectUris": [
+        "https://oauth.pstmn.io/v1/browser-callback",
+        "https://oauth.pstmn.io/v1/callback"
+      ],
+      "webOrigins": [],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      }
+    },
+    {
+      "clientId": "learnova-admin-client",
+      "name": "Learnova Admin Client",
+      "description": "Backend service account for Learnova Keycloak administration",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": false
     }
   ],
+
   "users": [
     {
       "username": "test-student",
