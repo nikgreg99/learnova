@@ -84,6 +84,56 @@ docker compose logs -f learnova-backend
 
 ---
 
+## Database Migrations (Flyway)
+
+Learnova uses **Flyway** for automated, version-controlled database schema migrations across development, testing, and production environments.
+
+Hibernate is intentionally configured with `ddl-auto: validate` so that Flyway is the single source of truth for the schema, while Hibernate ensures application entity mappings stay strictly synchronized.
+
+### Migration Script Naming Convention
+
+Migration scripts are stored in:
+`backend/src/main/resources/db/migration`
+
+Scripts must strictly follow the Flyway versioning pattern:
+
+```text
+V<Version>__<Description>.sql
+```
+
+- **`V`**: Prefix denoting a versioned migration.
+- **`<Version>`**: Numeric version (e.g. `1`, `2`, `2.1`). Flyway applies migrations in ascending version order.
+- **`__`**: Exactly **two underscores** as the separator.
+- **`<Description>`**: Brief description in lowercase with words separated by underscores (e.g., `create_course_table`).
+- **`.sql`**: Standard SQL file extension.
+
+*Example:* `V1__create_course_table.sql`
+
+### How to Add a New Migration
+
+1. Create a new `.sql` file in `backend/src/main/resources/db/migration/` using the next version number:
+
+   ```bash
+   touch backend/src/main/resources/db/migration/V2__add_instructor_column.sql
+   ```
+
+2. Write standard PostgreSQL DDL statements:
+
+   ```sql
+   ALTER TABLE course ADD COLUMN instructor VARCHAR(255);
+   ```
+
+3. Update the corresponding JPA entity class if applicable.
+4. Run `./mvnw test` to verify that Flyway executes the migration against the test database and Hibernate validation succeeds.
+
+### Tracking and Failure Handling
+
+- **Execution Tracking:** Flyway maintains a `flyway_schema_history` table in PostgreSQL. It records the version, description, execution timestamp, and a **checksum** of each applied script. Previously applied migrations are never re-run.
+- **Checksum Integrity:** Never alter an existing migration script after it has been merged or applied. Flyway compares checksums on application startup and will fail to boot if a mismatch is detected.
+- **Failure Handling:** If a migration script contains invalid SQL or fails during execution, Spring Boot immediately halts context initialization. The database will not be left in an unversioned state, and the application will not serve traffic until the migration error is resolved.
+
+---
+
 ## Testing
 
 Run the full test suite (including Testcontainers integration tests):
