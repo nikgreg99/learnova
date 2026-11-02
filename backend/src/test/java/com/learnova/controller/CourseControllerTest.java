@@ -17,8 +17,10 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.security.oauth2.client.autoconfigure.OAuth2ClientAutoConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -27,7 +29,11 @@ import com.learnova.dto.course.CourseResponse;
 import com.learnova.service.CourseService;
 import tools.jackson.databind.json.JsonMapper;
 
-@WebMvcTest(CourseController.class)
+@WebMvcTest(
+        controllers = CourseController.class,
+        excludeAutoConfiguration = OAuth2ClientAutoConfiguration.class
+)
+@ActiveProfiles("test")
 public class CourseControllerTest {
 
     @Autowired
