@@ -1,8 +1,8 @@
 package com.learnova.controller;
 
-import com.learnova.dto.ApiError;
-import com.learnova.dto.CourseRequest;
-import com.learnova.dto.CourseResponse;
+import com.learnova.dto.error.ApiError;
+import com.learnova.dto.course.CourseRequest;
+import com.learnova.dto.course.CourseResponse;
 import com.learnova.service.CourseService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @Tag(name = "Courses", description = "Course management operations")
-@RequestMapping("/courses")
+@RequestMapping("/api/courses")
 @RestController
 public class CourseController {
 
