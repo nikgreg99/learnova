@@ -1,4 +1,4 @@
-package com.learnova.config;
+package com.learnova.config.openapi;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
