@@ -1,4 +1,4 @@
-package com.learnova.dto;
+package com.learnova.dto.course;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;

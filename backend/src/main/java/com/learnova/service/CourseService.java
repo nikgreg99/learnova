@@ -1,7 +1,7 @@
 package com.learnova.service;
 
-import com.learnova.dto.CourseRequest;
-import com.learnova.dto.CourseResponse;
+import com.learnova.dto.course.CourseRequest;
+import com.learnova.dto.course.CourseResponse;
 import com.learnova.exception.CourseNotFoundException;
 import com.learnova.mapper.CourseMapper;
 import com.learnova.repository.CourseRepository;

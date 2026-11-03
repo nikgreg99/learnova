@@ -1,6 +1,6 @@
 package com.learnova.exception;
 
-import com.learnova.dto.ApiError;
+import com.learnova.dto.error.ApiError;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
@@ -31,6 +31,34 @@ public class GlobalMessageHandler {
                         request.getLocale());
 
         return buildError(HttpStatus.NOT_FOUND, message, request);
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ApiError> handleUserNotFoundException(
+            UserNotFoundException ex,
+            HttpServletRequest request
+    ) {
+        String message = messageSource.getMessage(
+                "user.not-found",
+                new Object[]{ex.getUserId()},
+                request.getLocale()
+        );
+
+        return buildError(HttpStatus.NOT_FOUND, message, request);
+    }
+
+    @ExceptionHandler(UserDeletedException.class)
+    public ResponseEntity<ApiError> handleUserDeletedException(
+            UserDeletedException ex,
+            HttpServletRequest request
+    ) {
+        String message = messageSource.getMessage(
+                "user.deleted",
+                new Object[]{ex.getUserId()},
+                request.getLocale()
+        );
+
+        return buildError(HttpStatus.CONFLICT, message, request);
     }
 
 

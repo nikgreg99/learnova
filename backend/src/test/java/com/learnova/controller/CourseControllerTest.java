@@ -17,17 +17,23 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.security.oauth2.client.autoconfigure.OAuth2ClientAutoConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.learnova.dto.CourseRequest;
-import com.learnova.dto.CourseResponse;
+import com.learnova.dto.course.CourseRequest;
+import com.learnova.dto.course.CourseResponse;
 import com.learnova.service.CourseService;
 import tools.jackson.databind.json.JsonMapper;
 
-@WebMvcTest(CourseController.class)
+@WebMvcTest(
+        controllers = CourseController.class,
+        excludeAutoConfiguration = OAuth2ClientAutoConfiguration.class
+)
+@ActiveProfiles("test")
 public class CourseControllerTest {
 
     @Autowired
@@ -57,10 +63,10 @@ public class CourseControllerTest {
     }
 
     @Test
-    void shouldReturnCoursesWhenCoursesExist() throws Exception {
+    void getCourses_shouldReturnCoursesWhenCoursesExist() throws Exception {
         when(courseService.getCourses()).thenReturn(List.of(courseResponse));
 
-        mockMvc.perform(get("/courses"))
+        mockMvc.perform(get("/api/courses"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$.length()").value(1))
@@ -68,39 +74,39 @@ public class CourseControllerTest {
     }
 
     @Test
-    void shouldReturnEmptyListWhenNoCoursesExist() throws Exception {
+    void getCourses_shouldReturnEmptyListWhenNoCoursesExist() throws Exception {
         when(courseService.getCourses()).thenReturn(List.of());
 
-        mockMvc.perform(get("/courses"))
+        mockMvc.perform(get("/api/courses"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$.length()").value(0));
     }
 
     @Test
-    void shouldReturnCourseWhenCourseExists() throws Exception {
+    void getCourse_shouldReturnCourseWhenCourseExists() throws Exception {
         when(courseService.getCourseById(courseResponse.id())).thenReturn(Optional.of(courseResponse));
 
-        mockMvc.perform(get("/courses/{id}", courseResponse.id()))
+        mockMvc.perform(get("/api/courses/{id}", courseResponse.id()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(courseResponse.id()))
                 .andExpect(jsonPath("$.name").value(courseResponse.name()));
     }
 
     @Test
-    void shouldReturnNotFoundWhenCourseDoesNotExist() throws Exception {
+    void getCourse_shouldReturnNotFoundWhenCourseDoesNotExist() throws Exception {
         Long nonExistingId = 999L;
         when(courseService.getCourseById(nonExistingId)).thenReturn(Optional.empty());
 
-        mockMvc.perform(get("/courses/{id}", nonExistingId))
+        mockMvc.perform(get("/api/courses/{id}", nonExistingId))
                 .andExpect(status().isNotFound());
     }
 
     @Test
-    void shouldCreateCourseWhenRequestIsValid() throws Exception {
+    void createCourse_shouldCreateCourseWhenRequestIsValid() throws Exception {
         when(courseService.addCourse(courseRequest)).thenReturn(courseResponse);
 
-        mockMvc.perform(post("/courses")
+        mockMvc.perform(post("/api/courses")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(courseRequest)))
                 .andExpect(status().isCreated())
@@ -109,13 +115,13 @@ public class CourseControllerTest {
     }
 
     @Test
-    void shouldReturnBadRequestWhenRequestIsInvalid() throws Exception {
+    void createCourse_shouldReturnBadRequestWhenRequestIsInvalid() throws Exception {
         CourseRequest invalidRequest = new CourseRequest(
                 "",
                 "Introduction to Java",
                 new BigDecimal("49.90"));
 
-        mockMvc.perform(post("/courses")
+        mockMvc.perform(post("/api/courses")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest());
@@ -124,10 +130,10 @@ public class CourseControllerTest {
     }
 
     @Test
-    void shouldUpdateCourseWhenCourseExists() throws Exception {
+    void updateCourse_shouldUpdateCourseWhenCourseExists() throws Exception {
         when(courseService.updateCourse(courseResponse.id(), courseRequest)).thenReturn(Optional.of(courseResponse));
 
-        mockMvc.perform(put("/courses/{id}", courseResponse.id())
+        mockMvc.perform(put("/api/courses/{id}", courseResponse.id())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(courseRequest)))
                 .andExpect(status().isOk())
@@ -136,18 +142,18 @@ public class CourseControllerTest {
     }
 
     @Test
-    void shouldReturnNotFoundWhenUpdatingNonExistingCourse() throws Exception {
+    void updateCourse_shouldReturnNotFoundWhenUpdatingNonExistingCourse() throws Exception {
         when(courseService.updateCourse(courseResponse.id(), courseRequest)).thenReturn(Optional.empty());
 
-        mockMvc.perform(put("/courses/{id}", courseResponse.id())
+        mockMvc.perform(put("/api/courses/{id}", courseResponse.id())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(courseRequest)))
                 .andExpect(status().isNotFound());
     }
 
     @Test
-    void shouldDeleteCourseWhenCourseExists() throws Exception {
-        mockMvc.perform(delete("/courses/{id}", courseResponse.id()))
+    void deleteCourse_shouldDeleteCourseWhenCourseExists() throws Exception {
+        mockMvc.perform(delete("/api/courses/{id}", courseResponse.id()))
                 .andExpect(status().isNoContent());
 
         verify(courseService).deleteCourseById(courseResponse.id());

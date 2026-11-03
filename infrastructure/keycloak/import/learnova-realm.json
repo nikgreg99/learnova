@@ -1,0 +1,85 @@
+
+{
+  "realm": "learnova",
+  "enabled": true,
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": false,
+
+  "roles": {
+    "realm": [
+      {
+        "name": "STUDENT",
+        "description": "Can access learning resources"
+      },
+      {
+        "name": "INSTRUCTOR",
+        "description": "Can manage courses"
+      },
+      {
+        "name": "ADMIN",
+        "description": "Can manage the platform"
+      }
+    ]
+  },
+
+  "clients": [
+    {
+      "clientId": "learnova-backend",
+      "name": "Learnova Backend",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "implicitFlowEnabled": false,
+      "serviceAccountsEnabled": false,
+      "authorizationServicesEnabled": false,
+      "redirectUris": [
+        "http://localhost:8080/login/oauth2/code/keycloak"
+      ],
+      "webOrigins": [
+        "http://localhost:8080"
+      ],
+      "attributes": {
+        "post.logout.redirect.uris": "http://localhost:8080/"
+      }
+    },
+    {
+      "clientId": "learnova-admin-client",
+      "name": "Learnova Admin Client",
+      "description": "Backend service account for Learnova Keycloak administration",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": false
+    }
+  ],
+
+  "users": [
+    {
+      "username": "test-student",
+      "enabled": true,
+      "email": "test-student@learnova.local",
+      "emailVerified": true,
+      "firstName": "Test",
+      "lastName": "Student",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "LearnovaLocal123!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "STUDENT"
+      ],
+      "requiredActions": []
+    }
+  ]
+}
