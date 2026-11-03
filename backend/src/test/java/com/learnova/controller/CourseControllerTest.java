@@ -63,7 +63,7 @@ public class CourseControllerTest {
     }
 
     @Test
-    void shouldReturnCoursesWhenCoursesExist() throws Exception {
+    void getCourses_shouldReturnCoursesWhenCoursesExist() throws Exception {
         when(courseService.getCourses()).thenReturn(List.of(courseResponse));
 
         mockMvc.perform(get("/api/courses"))
@@ -74,7 +74,7 @@ public class CourseControllerTest {
     }
 
     @Test
-    void shouldReturnEmptyListWhenNoCoursesExist() throws Exception {
+    void getCourses_shouldReturnEmptyListWhenNoCoursesExist() throws Exception {
         when(courseService.getCourses()).thenReturn(List.of());
 
         mockMvc.perform(get("/api/courses"))
@@ -84,7 +84,7 @@ public class CourseControllerTest {
     }
 
     @Test
-    void shouldReturnCourseWhenCourseExists() throws Exception {
+    void getCourse_shouldReturnCourseWhenCourseExists() throws Exception {
         when(courseService.getCourseById(courseResponse.id())).thenReturn(Optional.of(courseResponse));
 
         mockMvc.perform(get("/api/courses/{id}", courseResponse.id()))
@@ -94,7 +94,7 @@ public class CourseControllerTest {
     }
 
     @Test
-    void shouldReturnNotFoundWhenCourseDoesNotExist() throws Exception {
+    void getCourse_shouldReturnNotFoundWhenCourseDoesNotExist() throws Exception {
         Long nonExistingId = 999L;
         when(courseService.getCourseById(nonExistingId)).thenReturn(Optional.empty());
 
@@ -103,7 +103,7 @@ public class CourseControllerTest {
     }
 
     @Test
-    void shouldCreateCourseWhenRequestIsValid() throws Exception {
+    void createCourse_shouldCreateCourseWhenRequestIsValid() throws Exception {
         when(courseService.addCourse(courseRequest)).thenReturn(courseResponse);
 
         mockMvc.perform(post("/api/courses")
@@ -115,7 +115,7 @@ public class CourseControllerTest {
     }
 
     @Test
-    void shouldReturnBadRequestWhenRequestIsInvalid() throws Exception {
+    void createCourse_shouldReturnBadRequestWhenRequestIsInvalid() throws Exception {
         CourseRequest invalidRequest = new CourseRequest(
                 "",
                 "Introduction to Java",
@@ -130,7 +130,7 @@ public class CourseControllerTest {
     }
 
     @Test
-    void shouldUpdateCourseWhenCourseExists() throws Exception {
+    void updateCourse_shouldUpdateCourseWhenCourseExists() throws Exception {
         when(courseService.updateCourse(courseResponse.id(), courseRequest)).thenReturn(Optional.of(courseResponse));
 
         mockMvc.perform(put("/api/courses/{id}", courseResponse.id())
@@ -142,7 +142,7 @@ public class CourseControllerTest {
     }
 
     @Test
-    void shouldReturnNotFoundWhenUpdatingNonExistingCourse() throws Exception {
+    void updateCourse_shouldReturnNotFoundWhenUpdatingNonExistingCourse() throws Exception {
         when(courseService.updateCourse(courseResponse.id(), courseRequest)).thenReturn(Optional.empty());
 
         mockMvc.perform(put("/api/courses/{id}", courseResponse.id())
@@ -152,7 +152,7 @@ public class CourseControllerTest {
     }
 
     @Test
-    void shouldDeleteCourseWhenCourseExists() throws Exception {
+    void deleteCourse_shouldDeleteCourseWhenCourseExists() throws Exception {
         mockMvc.perform(delete("/api/courses/{id}", courseResponse.id()))
                 .andExpect(status().isNoContent());
 

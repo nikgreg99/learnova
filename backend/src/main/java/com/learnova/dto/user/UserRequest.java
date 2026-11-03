@@ -1,10 +1,12 @@
 package com.learnova.dto.user;
 
-import com.learnova.model.Role;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+
+import java.util.Set;
 
 public record UserRequest(
 
@@ -25,7 +27,8 @@ public record UserRequest(
         @Size(max = 100)
         String username,
 
-        Role role,
+        @NotEmpty
+        Set<@NotBlank String> roles,
 
         @NotNull
         String password

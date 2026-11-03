@@ -1,10 +1,9 @@
 package com.learnova.dto.user;
 
-
-import com.learnova.model.Role;
 import com.learnova.model.UserStatus;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
 public record UserResponse(
         Long id,
@@ -12,7 +11,7 @@ public record UserResponse(
         String lastName,
         String email,
         String username,
-        Role role,
+        Set<String> roles,
         UserStatus status,
         LocalDateTime createdAt,
         LocalDateTime updatedAt

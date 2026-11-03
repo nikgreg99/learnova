@@ -3,7 +3,6 @@ package com.learnova.client;
 
 import com.learnova.config.keycloak.KeycloakAdminProperties;
 import com.learnova.dto.user.UserRequest;
-import com.learnova.model.Role;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
@@ -15,6 +14,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 
 import java.net.URI;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -217,13 +217,13 @@ class KeycloakAdminClientTest {
 
     private UserRequest createUserRequest() {
         return new UserRequest(
-                "John",
-                "Doe",
-                "john.doe@example.com",
-                "john.doe",
-                Role.STUDENT,
-                "Password123!"
-        );
+            "John",
+            "Doe",
+            "john.doe@example.com",
+            "john.doe",
+            Set.of("STUDENT", "INSTRUCTOR"),
+            "Password123!"
+    );
     }
 
     private void mockTokenResponse() {
