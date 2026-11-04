@@ -1,4 +1,4 @@
-package com.learnova.config;
+package com.learnova.config.keycloak;
 
 import com.learnova.service.KeycloakTestUserSyncService;
 import org.slf4j.Logger;

@@ -61,6 +61,20 @@ public class GlobalMessageHandler {
         return buildError(HttpStatus.CONFLICT, message, request);
     }
 
+    @ExceptionHandler(UserProfileConflictException.class)
+    public ResponseEntity<ApiError> handleUserProfileConflictException(
+            UserProfileConflictException ex,
+            HttpServletRequest request
+    ) {
+        String message = messageSource.getMessage(
+                "user.profile-conflict",
+                new Object[]{ex.getConflictingField()},
+                request.getLocale()
+        );
+
+        return buildError(HttpStatus.CONFLICT, message, request);
+    }
+
 
     private ResponseEntity<ApiError> buildError(
             HttpStatus httpStatus,

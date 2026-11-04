@@ -3,6 +3,8 @@ package com.learnova.client;
 
 import com.learnova.config.keycloak.KeycloakAdminProperties;
 import com.learnova.dto.user.UserRequest;
+import com.learnova.dto.user.UserProfileUpdateRequest;
+import com.learnova.exception.UserProfileConflictException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
@@ -154,6 +156,71 @@ class KeycloakAdminClientTest {
                 .andRespond(withSuccess());
 
         keycloakAdminClient.setUserEnabled(KEYCLOAK_USER_ID, true);
+
+        mockServer.verify();
+    }
+
+    @Test
+    void updateUserProfile_shouldUpdateKeycloakUserDetails() {
+        mockTokenResponse();
+
+        mockServer.expect(requestTo(
+                        BASE_URL + "/admin/realms/" + REALM
+                                + "/users/" + KEYCLOAK_USER_ID
+                ))
+                .andExpect(method(HttpMethod.PUT))
+                .andExpect(header(
+                        HttpHeaders.AUTHORIZATION,
+                        "Bearer " + ACCESS_TOKEN
+                ))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json("""
+                        {
+                          "username": "updated",
+                          "email": "updated@example.com",
+                          "firstName": "Updated",
+                          "lastName": "User"
+                        }
+                        """))
+                .andRespond(withSuccess());
+
+        keycloakAdminClient.updateUserProfile(
+                KEYCLOAK_USER_ID,
+                new UserProfileUpdateRequest(
+                        "Updated",
+                        "User",
+                        "updated@example.com",
+                        "updated"
+                )
+        );
+
+        mockServer.verify();
+    }
+
+    @Test
+    void updateUserProfile_shouldTranslateKeycloakConflict() {
+        mockTokenResponse();
+
+        mockServer.expect(requestTo(
+                        BASE_URL + "/admin/realms/" + REALM
+                                + "/users/" + KEYCLOAK_USER_ID
+                ))
+                .andExpect(method(HttpMethod.PUT))
+                .andRespond(withStatus(HttpStatus.CONFLICT));
+
+        assertThatThrownBy(() -> keycloakAdminClient.updateUserProfile(
+                KEYCLOAK_USER_ID,
+                new UserProfileUpdateRequest(
+                        "Updated",
+                        "User",
+                        "taken@example.com",
+                        "updated"
+                )
+        )).isInstanceOfSatisfying(
+                UserProfileConflictException.class,
+                exception -> assertThat(exception.getConflictingField())
+                        .isEqualTo("email or username")
+        );
 
         mockServer.verify();
     }

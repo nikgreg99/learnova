@@ -2,15 +2,21 @@
 package com.learnova.service;
 
 import com.learnova.dto.user.UserRequest;
+import com.learnova.dto.user.UserProfileUpdateRequest;
 import com.learnova.dto.user.UserResponse;
 import com.learnova.exception.UserDeletedException;
 import com.learnova.exception.UserNotFoundException;
+import com.learnova.exception.UserProfileConflictException;
 import com.learnova.mapper.UserMapper;
 import com.learnova.model.Role;
 import com.learnova.model.User;
 import com.learnova.model.UserStatus;
 import com.learnova.repository.RoleRepository;
 import com.learnova.repository.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -149,10 +155,48 @@ class UserServiceTest {
         verify(userRepository, never()).save(any(User.class));
     }
 
-    // DISABLE USER
+    @Test
+    void getUsers_shouldReturnPaginatedUserResponses() {
+        Pageable pageable = PageRequest.of(0, 20);
+        User firstUser = createUser(1L, UserStatus.ACTIVE);
+        User secondUser = createUser(2L, UserStatus.DISABLED);
+        Page<User> users = new PageImpl<>(List.of(firstUser, secondUser), pageable, 2);
+
+        when(userRepository.findAll(pageable)).thenReturn(users);
+        when(userMapper.toResponse(firstUser)).thenReturn(response);
+        when(userMapper.toResponse(secondUser)).thenReturn(response);
+
+        Page<UserResponse> result = userService.getUsers(pageable);
+
+        assertEquals(2, result.getTotalElements());
+        assertEquals(2, result.getContent().size());
+        verify(userRepository).findAll(pageable);
+    }
 
     @Test
-    void disableUser_shouldSetStatusToDisabled() {
+    void getUser_shouldReturnUserResponse() {
+        Long id = 1L;
+        User user = createUser(id, UserStatus.ACTIVE);
+        when(userRepository.findById(id)).thenReturn(Optional.of(user));
+        when(userMapper.toResponse(user)).thenReturn(response);
+
+        assertEquals(response, userService.getUser(id));
+        verify(userRepository).findById(id);
+    }
+
+    @Test
+    void getUser_shouldThrowWhenUserNotFound() {
+        Long id = 99L;
+        when(userRepository.findById(id)).thenReturn(Optional.empty());
+
+        assertThrows(UserNotFoundException.class, () -> userService.getUser(id));
+        verify(userMapper, never()).toResponse(any());
+    }
+
+    // UPDATE USER STATUS
+
+    @Test
+    void updateUserStatus_shouldSetStatusToDisabled() {
         Long id = 1L;
         User user = createUser(id, UserStatus.ACTIVE);
 
@@ -162,7 +206,7 @@ class UserServiceTest {
         when(userMapper.toResponse(user))
                 .thenReturn(response);
 
-        UserResponse result = userService.disableUser(id);
+        UserResponse result = userService.updateUserStatus(id, UserStatus.DISABLED);
 
         assertEquals(UserStatus.DISABLED, user.getStatus());
         assertNotNull(result);
@@ -173,7 +217,7 @@ class UserServiceTest {
     }
 
     @Test
-    void disableUser_shouldThrowWhenUserNotFound() {
+    void updateUserStatus_shouldThrowWhenUserNotFoundForDisabledStatus() {
         Long id = 99L;
 
         when(userRepository.findById(id))
@@ -181,7 +225,7 @@ class UserServiceTest {
 
         assertThrows(
                 UserNotFoundException.class,
-                () -> userService.disableUser(id)
+                () -> userService.updateUserStatus(id, UserStatus.DISABLED)
         );
 
         verifyNoInteractions(keycloakUserService);
@@ -189,7 +233,115 @@ class UserServiceTest {
     }
 
     @Test
-    void disableUser_shouldRejectDeletedUserWithoutChangingKeycloak() {
+    void updateUserStatus_shouldRejectUnsupportedStatus() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> userService.updateUserStatus(1L, UserStatus.DELETED)
+        );
+
+        verifyNoInteractions(userRepository, keycloakUserService, userMapper);
+    }
+
+    @Test
+    void updateUserProfile_shouldUpdateKeycloakAndLocalProfile() {
+        Long id = 1L;
+        User user = createUser(id, UserStatus.ACTIVE);
+        UserProfileUpdateRequest update = new UserProfileUpdateRequest(
+                "Updated",
+                "User",
+                "updated@example.com",
+                "updated"
+        );
+
+        when(userRepository.findById(id)).thenReturn(Optional.of(user));
+        when(userMapper.toResponse(user)).thenReturn(response);
+
+        UserResponse result = userService.updateUserProfile(id, update);
+
+        assertNotNull(result);
+        assertEquals("Updated", user.getFirstName());
+        assertEquals("User", user.getLastName());
+        assertEquals("updated@example.com", user.getEmail());
+        assertEquals("updated", user.getUsername());
+        verify(keycloakUserService).updateProfile(user.getKeycloakId(), update);
+        verify(userMapper).toResponse(user);
+    }
+
+    @Test
+    void updateUserProfile_shouldRejectEmailOrUsernameAlreadyInUse() {
+        Long id = 1L;
+        User user = createUser(id, UserStatus.ACTIVE);
+        UserProfileUpdateRequest update = new UserProfileUpdateRequest(
+                "Updated",
+                "User",
+                "taken@example.com",
+                "updated"
+        );
+
+        when(userRepository.findById(id)).thenReturn(Optional.of(user));
+        when(userRepository.existsByEmailAndIdNot(update.email(), id))
+                .thenReturn(true);
+
+        UserProfileConflictException exception = assertThrows(
+                UserProfileConflictException.class,
+                () -> userService.updateUserProfile(id, update)
+        );
+
+        assertEquals("email", exception.getConflictingField());
+        verifyNoInteractions(keycloakUserService);
+        verify(userMapper, never()).toResponse(any());
+    }
+
+    @Test
+    void updateUserProfile_shouldNotChangeLocalProfileWhenKeycloakUpdateFails() {
+        Long id = 1L;
+        User user = createUser(id, UserStatus.ACTIVE);
+        user.setFirstName("Original");
+        UserProfileUpdateRequest update = new UserProfileUpdateRequest(
+                "Updated",
+                "User",
+                "updated@example.com",
+                "updated"
+        );
+
+        when(userRepository.findById(id)).thenReturn(Optional.of(user));
+        doThrow(new IllegalStateException("Keycloak update failed"))
+                .when(keycloakUserService)
+                .updateProfile(user.getKeycloakId(), update);
+
+        assertThrows(
+                IllegalStateException.class,
+                () -> userService.updateUserProfile(id, update)
+        );
+
+        assertEquals("Original", user.getFirstName());
+        verify(userMapper, never()).toResponse(any());
+    }
+
+    @Test
+    void updateUserProfile_shouldRejectDeletedUser() {
+        Long id = 1L;
+        User user = createUser(id, UserStatus.DELETED);
+        UserProfileUpdateRequest update = new UserProfileUpdateRequest(
+                "Updated",
+                "User",
+                "updated@example.com",
+                "updated"
+        );
+
+        when(userRepository.findById(id)).thenReturn(Optional.of(user));
+
+        assertThrows(
+                UserDeletedException.class,
+                () -> userService.updateUserProfile(id, update)
+        );
+
+        verifyNoInteractions(keycloakUserService);
+        verify(userMapper, never()).toResponse(any());
+    }
+
+    @Test
+    void updateUserStatus_shouldRejectDeletedUserWithoutChangingKeycloak() {
         Long id = 1L;
         User user = createUser(id, UserStatus.DELETED);
 
@@ -198,7 +350,7 @@ class UserServiceTest {
 
         assertThrows(
                 UserDeletedException.class,
-                () -> userService.disableUser(id)
+                () -> userService.updateUserStatus(id, UserStatus.DISABLED)
         );
 
         verifyNoInteractions(keycloakUserService);
@@ -206,7 +358,7 @@ class UserServiceTest {
     }
 
     @Test
-    void disableUser_shouldKeepLocalStatusWhenKeycloakUpdateFails() {
+    void updateUserStatus_shouldKeepLocalStatusWhenKeycloakUpdateFails() {
         Long id = 1L;
         User user = createUser(id, UserStatus.ACTIVE);
 
@@ -218,17 +370,15 @@ class UserServiceTest {
 
         assertThrows(
                 IllegalStateException.class,
-                () -> userService.disableUser(id)
+                () -> userService.updateUserStatus(id, UserStatus.DISABLED)
         );
 
         assertEquals(UserStatus.ACTIVE, user.getStatus());
         verify(userMapper, never()).toResponse(any());
     }
 
-    // ENABLE USER
-
     @Test
-    void enableUser_shouldSetStatusToActive() {
+    void updateUserStatus_shouldSetStatusToActive() {
         Long id = 1L;
         User user = createUser(id, UserStatus.DISABLED);
 
@@ -238,7 +388,7 @@ class UserServiceTest {
         when(userMapper.toResponse(user))
                 .thenReturn(response);
 
-        UserResponse result = userService.enableUser(id);
+        UserResponse result = userService.updateUserStatus(id, UserStatus.ACTIVE);
 
         assertEquals(UserStatus.ACTIVE, user.getStatus());
         assertNotNull(result);
@@ -249,7 +399,7 @@ class UserServiceTest {
     }
 
     @Test
-    void enableUser_shouldThrowWhenUserNotFound() {
+    void updateUserStatus_shouldThrowWhenUserNotFoundForActiveStatus() {
         Long id = 99L;
 
         when(userRepository.findById(id))
@@ -257,7 +407,7 @@ class UserServiceTest {
 
         assertThrows(
                 UserNotFoundException.class,
-                () -> userService.enableUser(id)
+                () -> userService.updateUserStatus(id, UserStatus.ACTIVE)
         );
 
         verifyNoInteractions(keycloakUserService);
@@ -265,7 +415,7 @@ class UserServiceTest {
     }
 
     @Test
-    void enableUser_shouldRejectDeletedUser() {
+    void updateUserStatus_shouldRejectDeletedUser() {
         Long id = 1L;
         User user = createUser(id, UserStatus.DELETED);
 
@@ -274,7 +424,7 @@ class UserServiceTest {
 
         assertThrows(
                 UserDeletedException.class,
-                () -> userService.enableUser(id)
+                () -> userService.updateUserStatus(id, UserStatus.ACTIVE)
         );
 
         assertEquals(UserStatus.DELETED, user.getStatus());

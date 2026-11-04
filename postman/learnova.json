@@ -38,7 +38,7 @@
           "response": []
         }
       ],
-      "description": "Autenticazione e profilo utente.\n\nEndpoint inclusi:\n- GET /api/auth/me — restituisce il profilo dell'utente associato al token Keycloak.\n\nRichiede il Bearer token ottenuto tramite la configurazione OAuth 2.0 della collection. Account di test locale: {{testAccountName}}."
+      "description": "Autenticazione e profilo utente.\n\nEndpoint inclusi:\n- GET /api/auth/me ? restituisce il profilo associato al token Keycloak.\n\nRichiede autenticazione tramite la configurazione OAuth 2.0 della collection. Account di test locale: {{testAccountName}}."
     },
     {
       "name": "Users",
@@ -82,12 +82,12 @@
           "response": []
         },
         {
-          "name": "Disable user",
+          "name": "List users",
           "request": {
-            "method": "PATCH",
+            "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{proto}}://{{host}}:{{port}}/api/users/{{userId}}/disable",
+              "raw": "{{proto}}://{{host}}:{{port}}/api/users?page=0&size=20",
               "protocol": "{{proto}}",
               "host": [
                 "{{host}}"
@@ -95,21 +95,102 @@
               "port": "{{port}}",
               "path": [
                 "api",
-                "users",
-                "{{userId}}",
-                "disable"
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                }
               ]
-            }
+            },
+            "description": "Elenca gli utenti a pagine di 20, dal più recente. Include account disabilitati ed eliminati."
           },
           "response": []
         },
         {
-          "name": "Enable user",
+          "name": "Get user by ID",
           "request": {
-            "method": "PATCH",
+            "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{proto}}://{{host}}:{{port}}/api/users/{{userId}}/enable",
+              "raw": "{{proto}}://{{host}}:{{port}}/api/users/{{userId}}",
+              "protocol": "{{proto}}",
+              "host": [
+                "{{host}}"
+              ],
+              "port": "{{port}}",
+              "path": [
+                "api",
+                "users",
+                "{{userId}}"
+              ]
+            },
+            "description": "Recupera il profilo dell'utente indicato, inclusi account disabilitati ed eliminati."
+          },
+          "response": []
+        },
+        {
+          "name": "Update user profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"{{userFirstName}}\",\n  \"lastName\": \"{{userLastName}}\",\n  \"email\": \"{{userEmail}}\",\n  \"username\": \"{{userUsername}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{proto}}://{{host}}:{{port}}/api/users/{{userId}}",
+              "protocol": "{{proto}}",
+              "host": [
+                "{{host}}"
+              ],
+              "port": "{{port}}",
+              "path": [
+                "api",
+                "users",
+                "{{userId}}"
+              ]
+            },
+            "description": "Aggiorna nome, cognome, email e username in Learnova e Keycloak. Richiede un JWT valido."
+          },
+          "response": []
+        },
+        {
+          "name": "Update user status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"DISABLED\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{proto}}://{{host}}:{{port}}/api/users/{{userId}}/status",
               "protocol": "{{proto}}",
               "host": [
                 "{{host}}"
@@ -119,9 +200,10 @@
                 "api",
                 "users",
                 "{{userId}}",
-                "enable"
+                "status"
               ]
-            }
+            },
+            "description": "Invia status ACTIVE per abilitare oppure DISABLED per disabilitare l'utente."
           },
           "response": []
         },
@@ -148,7 +230,7 @@
           "response": []
         }
       ],
-      "description": "Registrazione e gestione degli utenti.\n\nEndpoint inclusi:\n- POST /api/users — crea un utente; endpoint pubblico, assegna STUDENT se roles è omesso.\n- PATCH /api/users/{{userId}}/disable — disabilita l'utente nel database Learnova e in Keycloak.\n- PATCH /api/users/{{userId}}/enable — riabilita l'utente sia in Learnova sia in Keycloak.\n- DELETE /api/users/{{userId}} — imposta DELETED in Learnova e disabilita l'account Keycloak (soft delete).\n\nLe operazioni diverse dalla registrazione richiedono l'autenticazione Bearer della collection."
+      "description": "Registrazione e gestione degli utenti.\n\nEndpoint inclusi:\n- POST /api/users ? crea un utente; endpoint pubblico, assegna STUDENT se roles ? omesso.\n- GET /api/users?page=0&size=20 ? elenca gli utenti paginati, inclusi account disabilitati ed eliminati.\n- GET /api/users/{{userId}} ? recupera un utente per ID.\n- PUT /api/users/{{userId}} ? aggiorna nome, cognome, email e username in Learnova e Keycloak.\n- PATCH /api/users/{{userId}}/status ? abilita (status ACTIVE) o disabilita (status DISABLED) l?utente in Learnova e Keycloak.\n- DELETE /api/users/{{userId}} ? imposta DELETED in Learnova e disabilita l?account Keycloak (soft delete).\n\nLe operazioni diverse dalla registrazione richiedono autenticazione."
     },
     {
       "name": "Courses",
@@ -285,7 +367,7 @@
           "response": []
         }
       ],
-      "description": "Lettura e gestione del catalogo corsi.\n\nEndpoint inclusi:\n- GET /api/courses — elenca i corsi.\n- GET /api/courses/{{courseId}} — recupera un corso.\n- POST /api/courses — crea un corso.\n- PUT /api/courses/{{courseId}} — aggiorna un corso.\n- DELETE /api/courses/{{courseId}} — elimina un corso.\n\nTutti gli endpoint richiedono il Bearer token della collection."
+      "description": "Lettura e gestione del catalogo corsi.\n\nEndpoint inclusi:\n- GET /api/courses ? elenca i corsi.\n- GET /api/courses/{{courseId}} ? recupera un corso.\n- POST /api/courses ? crea un corso.\n- PUT /api/courses/{{courseId}} ? aggiorna un corso.\n- DELETE /api/courses/{{courseId}} ? elimina un corso.\n\nTutti gli endpoint richiedono l?autenticazione della collection."
     }
   ],
   "auth": {

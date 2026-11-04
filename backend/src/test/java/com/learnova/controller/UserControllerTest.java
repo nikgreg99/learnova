@@ -2,11 +2,13 @@ package com.learnova.controller;
 
 
 import com.learnova.dto.user.UserRequest;
+import com.learnova.dto.user.UserProfileUpdateRequest;
 import com.learnova.dto.user.UserResponse;
 import com.learnova.config.security.SecurityConfig;
 import com.learnova.exception.GlobalMessageHandler;
 import com.learnova.exception.UserDeletedException;
 import com.learnova.exception.UserNotFoundException;
+import com.learnova.exception.UserProfileConflictException;
 import com.learnova.model.UserStatus;
 import com.learnova.service.UserService;
 import org.junit.jupiter.api.Test;
@@ -14,6 +16,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -90,27 +94,134 @@ class UserControllerTest {
         verify(userService).createUser(any(UserRequest.class));
     }
 
-    // DISABLE USER
+    @Test
+    void getUsers_shouldReturnPagedUsers() throws Exception {
+        UserResponse response = createUserResponse(UserStatus.ACTIVE);
+        when(userService.getUsers(any()))
+                .thenReturn(new PageImpl<>(java.util.List.of(response), PageRequest.of(0, 20), 1));
+
+        mockMvc.perform(get("/api/users")
+                        .param("page", "0")
+                        .param("size", "20")
+                        .with(jwt()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].id").value(1))
+                .andExpect(jsonPath("$.page.totalElements").value(1))
+                .andExpect(jsonPath("$.page.number").value(0));
+
+        verify(userService).getUsers(any());
+    }
 
     @Test
-    void disableUser_shouldReturn200Ok() throws Exception {
-        UserResponse response = createUserResponse(UserStatus.DISABLED);
+    void getUser_shouldReturnUserById() throws Exception {
+        when(userService.getUser(1L)).thenReturn(createUserResponse(UserStatus.DISABLED));
 
-        when(userService.disableUser(1L))
+        mockMvc.perform(get("/api/users/1").with(jwt()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.status").value("DISABLED"));
+
+        verify(userService).getUser(1L);
+    }
+
+    @Test
+    void getUser_shouldReturn404WhenUserNotFound() throws Exception {
+        when(userService.getUser(99L)).thenThrow(new UserNotFoundException(99L));
+        when(messageSource.getMessage(
+                eq("user.not-found"),
+                any(Object[].class),
+                any(java.util.Locale.class)
+        )).thenReturn("User with id 99 was not found.");
+
+        mockMvc.perform(get("/api/users/99").with(jwt()))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("User with id 99 was not found."));
+    }
+
+    @Test
+    void updateUserProfile_shouldReturnUpdatedUser() throws Exception {
+        UserProfileUpdateRequest request = new UserProfileUpdateRequest(
+                "Mario",
+                "Bianchi",
+                "mario.bianchi@example.com",
+                "mbianchi"
+        );
+        UserResponse response = new UserResponse(
+                1L,
+                "Mario",
+                "Bianchi",
+                "mario.bianchi@example.com",
+                "mbianchi",
+                Set.of("STUDENT"),
+                UserStatus.ACTIVE,
+                null,
+                null
+        );
+
+        when(userService.updateUserProfile(eq(1L), any(UserProfileUpdateRequest.class)))
                 .thenReturn(response);
 
-        mockMvc.perform(patch("/api/users/1/disable")
+        mockMvc.perform(put("/api/users/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonMapper.writeValueAsString(request))
+                        .with(jwt()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.firstName").value("Mario"))
+                .andExpect(jsonPath("$.lastName").value("Bianchi"))
+                .andExpect(jsonPath("$.email").value("mario.bianchi@example.com"))
+                .andExpect(jsonPath("$.username").value("mbianchi"));
+
+        verify(userService).updateUserProfile(eq(1L), any(UserProfileUpdateRequest.class));
+    }
+
+    @Test
+    void updateUserProfile_shouldReturn409WhenEmailOrUsernameIsTaken() throws Exception {
+        UserProfileUpdateRequest request = new UserProfileUpdateRequest(
+                "Mario",
+                "Rossi",
+                "taken@example.com",
+                "mrossi"
+        );
+        when(userService.updateUserProfile(eq(1L), any(UserProfileUpdateRequest.class)))
+                .thenThrow(new UserProfileConflictException("email"));
+        when(messageSource.getMessage(
+                eq("user.profile-conflict"),
+                any(Object[].class),
+                any(java.util.Locale.class)
+        )).thenReturn("The email is already in use.");
+
+        mockMvc.perform(put("/api/users/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonMapper.writeValueAsString(request))
+                        .with(jwt()))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message")
+                        .value("The email is already in use."));
+    }
+
+    // UPDATE USER STATUS
+
+    @Test
+    void updateUserStatus_shouldDisableUser() throws Exception {
+        UserResponse response = createUserResponse(UserStatus.DISABLED);
+
+        when(userService.updateUserStatus(1L, UserStatus.DISABLED))
+                .thenReturn(response);
+
+        mockMvc.perform(patch("/api/users/1/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"DISABLED\"}")
                         .with(jwt()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.status").value("DISABLED"));
 
-        verify(userService).disableUser(1L);
+        verify(userService).updateUserStatus(1L, UserStatus.DISABLED);
     }
 
     @Test
-    void disableUser_shouldReturn404WhenUserNotFound() throws Exception {
-        when(userService.disableUser(99L))
+    void updateUserStatus_shouldReturn404WhenUserNotFound() throws Exception {
+        when(userService.updateUserStatus(99L, UserStatus.DISABLED))
                 .thenThrow(new UserNotFoundException(99L));
 
         when(messageSource.getMessage(
@@ -119,37 +230,39 @@ class UserControllerTest {
                 any(java.util.Locale.class)
         )).thenReturn("User with id 99 was not found.");
 
-        mockMvc.perform(patch("/api/users/99/disable")
+        mockMvc.perform(patch("/api/users/99/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"DISABLED\"}")
                         .with(jwt()))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404))
                 .andExpect(jsonPath("$.message")
                         .value("User with id 99 was not found."));
 
-        verify(userService).disableUser(99L);
+        verify(userService).updateUserStatus(99L, UserStatus.DISABLED);
     }
 
-    // ENABLE USER
-
     @Test
-    void enableUser_shouldReturn200Ok() throws Exception {
+    void updateUserStatus_shouldEnableUser() throws Exception {
         UserResponse response = createUserResponse(UserStatus.ACTIVE);
 
-        when(userService.enableUser(1L))
+        when(userService.updateUserStatus(1L, UserStatus.ACTIVE))
                 .thenReturn(response);
 
-        mockMvc.perform(patch("/api/users/1/enable")
+        mockMvc.perform(patch("/api/users/1/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"ACTIVE\"}")
                         .with(jwt()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.status").value("ACTIVE"));
 
-        verify(userService).enableUser(1L);
+        verify(userService).updateUserStatus(1L, UserStatus.ACTIVE);
     }
 
     @Test
-    void enableUser_shouldReturn409WhenUserIsDeleted() throws Exception {
-        when(userService.enableUser(1L))
+    void updateUserStatus_shouldReturn409WhenUserIsDeleted() throws Exception {
+        when(userService.updateUserStatus(1L, UserStatus.ACTIVE))
                 .thenThrow(new UserDeletedException(1L));
 
         when(messageSource.getMessage(
@@ -158,14 +271,27 @@ class UserControllerTest {
                 any(java.util.Locale.class)
         )).thenReturn("User with id 1 has been deleted.");
 
-        mockMvc.perform(patch("/api/users/1/enable")
+        mockMvc.perform(patch("/api/users/1/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"ACTIVE\"}")
                         .with(jwt()))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.status").value(409))
                 .andExpect(jsonPath("$.message")
                         .value("User with id 1 has been deleted."));
 
-        verify(userService).enableUser(1L);
+        verify(userService).updateUserStatus(1L, UserStatus.ACTIVE);
+    }
+
+    @Test
+    void updateUserStatus_shouldRejectUnsupportedStatus() throws Exception {
+        mockMvc.perform(patch("/api/users/1/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"DELETED\"}")
+                        .with(jwt()))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(userService);
     }
 
     // DELETE USER

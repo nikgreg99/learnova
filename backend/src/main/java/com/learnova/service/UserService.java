@@ -1,16 +1,20 @@
 
 package com.learnova.service;
 
+import com.learnova.dto.user.UserProfileUpdateRequest;
 import com.learnova.dto.user.UserRequest;
 import com.learnova.dto.user.UserResponse;
 import com.learnova.exception.UserDeletedException;
 import com.learnova.exception.UserNotFoundException;
+import com.learnova.exception.UserProfileConflictException;
 import com.learnova.mapper.UserMapper;
 import com.learnova.model.Role;
 import com.learnova.model.User;
 import com.learnova.model.UserStatus;
 import com.learnova.repository.RoleRepository;
 import com.learnova.repository.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -84,23 +88,48 @@ public class UserService {
         return userMapper.toResponse(savedUser);
     }
 
-    public UserResponse disableUser(Long id) {
+    public Page<UserResponse> getUsers(Pageable pageable) {
+        return userRepository.findAll(pageable).map(userMapper::toResponse);
+    }
+
+    public UserResponse getUser(Long id) {
+        return userMapper.toResponse(getUserOrThrow(id));
+    }
+
+    public UserResponse updateUserStatus(Long id, UserStatus status) {
+        if (status == null || status == UserStatus.DELETED
+                || status == UserStatus.PENDING_APPROVAL) {
+            throw new IllegalArgumentException("Invalid user status");
+        }
+
         User user = getUserOrThrow(id);
         ensureUserNotDeleted(user);
-        keycloakUserService.setEnabled(user.getKeycloakId(), false);
-        user.setStatus(UserStatus.DISABLED);
+        keycloakUserService.setEnabled(
+                user.getKeycloakId(),
+                status == UserStatus.ACTIVE
+        );
+        user.setStatus(status);
 
         return userMapper.toResponse(user);
     }
 
-    @Transactional
-    public UserResponse enableUser(Long id) {
+    public UserResponse updateUserProfile(
+            Long id,
+            UserProfileUpdateRequest request
+    ) {
         User user = getUserOrThrow(id);
-
         ensureUserNotDeleted(user);
-        keycloakUserService.setEnabled(user.getKeycloakId(), true);
-        user.setStatus(UserStatus.ACTIVE);
-
+        if (userRepository.existsByEmailAndIdNot(request.email(), id)) {
+            throw new UserProfileConflictException("email");
+        }
+        if (userRepository.existsByUsernameAndIdNot(request.username(), id)) {
+            throw new UserProfileConflictException("username");
+        }
+        keycloakUserService.updateProfile(user.getKeycloakId(), request);
+        user.setFirstName(request.firstName());
+        user.setLastName(request.lastName());
+        user.setEmail(request.email());
+        user.setUsername(request.username());
         return userMapper.toResponse(user);
     }
 

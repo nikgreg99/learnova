@@ -4,6 +4,8 @@ package com.learnova.client;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.learnova.config.keycloak.KeycloakAdminProperties;
 import com.learnova.dto.user.UserRequest;
+import com.learnova.dto.user.UserProfileUpdateRequest;
+import com.learnova.exception.UserProfileConflictException;
 import org.jspecify.annotations.NonNull;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +13,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 
 import java.net.URI;
@@ -72,6 +75,30 @@ public class KeycloakAdminClient {
                 .body(new UserStatusRepresentation(enabled))
                 .retrieve()
                 .toBodilessEntity();
+    }
+
+    public void updateUserProfile(
+            String keycloakUserId,
+            UserProfileUpdateRequest request
+    ) {
+        String accessToken = getAdminToken();
+
+        try {
+            restClient.put()
+                    .uri(adminUserUri(keycloakUserId))
+                    .headers(headers -> headers.setBearerAuth(accessToken))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(new UserProfileRepresentation(
+                            request.username(),
+                            request.email(),
+                            request.firstName(),
+                            request.lastName()
+                    ))
+                    .retrieve()
+                    .toBodilessEntity();
+        } catch (HttpClientErrorException.Conflict ex) {
+            throw new UserProfileConflictException("email or username");
+        }
     }
 
     public List<TestUser> findTestUsers() {
@@ -219,6 +246,13 @@ public class KeycloakAdminClient {
 
     private record UserStatusRepresentation(
             boolean enabled
+    ) {}
+
+    private record UserProfileRepresentation(
+            String username,
+            String email,
+            String firstName,
+            String lastName
     ) {}
 
     @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
