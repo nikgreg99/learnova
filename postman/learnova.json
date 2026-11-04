@@ -380,12 +380,12 @@
       },
       {
         "key": "accessTokenUrl",
-        "value": "{{keycloakScheme}}://{{keycloakHost}}:{{keycloakPort}}/realms/{{keycloakRealm}}/protocol/openid-connect/token",
+        "value": "{{keycloakProto}}://{{keycloakHost}}:{{keycloakPort}}/realms/{{keycloakRealm}}/protocol/openid-connect/token",
         "type": "string"
       },
       {
         "key": "authUrl",
-        "value": "{{keycloakScheme}}://{{keycloakHost}}:{{keycloakPort}}/realms/{{keycloakRealm}}/protocol/openid-connect/auth",
+        "value": "{{keycloakProto}}://{{keycloakHost}}:{{keycloakPort}}/realms/{{keycloakRealm}}/protocol/openid-connect/auth",
         "type": "string"
       },
       {
@@ -424,7 +424,7 @@
       "value": "8080"
     },
     {
-      "key": "keycloakScheme",
+      "key": "keycloakProto",
       "value": "http"
     },
     {
