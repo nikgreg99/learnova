@@ -36,7 +36,10 @@ class LearnovaApplicationTests {
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.info.title").value("Learnova API"))
 				.andExpect(jsonPath("$.info.version").value("v1.0"))
-				.andExpect(jsonPath("$.paths['/courses']").exists());
+				.andExpect(jsonPath("$.components.securitySchemes.bearerAuth.type")
+						.value("http"))
+				.andExpect(jsonPath("$.paths['/api/courses'].get.security[0].bearerAuth")
+						.exists());
 	}
 
 }
