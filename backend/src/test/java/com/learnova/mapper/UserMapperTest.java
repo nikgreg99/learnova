@@ -1,7 +1,9 @@
 package com.learnova.mapper;
 
 import com.learnova.dto.user.UserRequest;
+import com.learnova.dto.user.UserProfileUpdateRequest;
 import com.learnova.model.User;
+import com.learnova.model.UserStatus;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 
@@ -36,5 +38,32 @@ class UserMapperTest {
 
         assertThat(userMapper.toResponse(user).username())
                 .isEqualTo("mrossi");
+    }
+
+    @Test
+    void updateUserProfile_shouldUpdateProfileAndPreserveOtherFields() {
+        User user = new User();
+        user.setKeycloakId("keycloak-123");
+        user.setFirstName("Mario");
+        user.setLastName("Rossi");
+        user.setEmail("mario.rossi@example.com");
+        user.setUsername("mrossi");
+        user.setStatus(UserStatus.ACTIVE);
+
+        UserProfileUpdateRequest request = new UserProfileUpdateRequest(
+                "Updated",
+                "User",
+                "updated@example.com",
+                "updated"
+        );
+
+        userMapper.updateUserProfile(request, user);
+
+        assertThat(user.getFirstName()).isEqualTo("Updated");
+        assertThat(user.getLastName()).isEqualTo("User");
+        assertThat(user.getEmail()).isEqualTo("updated@example.com");
+        assertThat(user.getUsername()).isEqualTo("updated");
+        assertThat(user.getKeycloakId()).isEqualTo("keycloak-123");
+        assertThat(user.getStatus()).isEqualTo(UserStatus.ACTIVE);
     }
 }

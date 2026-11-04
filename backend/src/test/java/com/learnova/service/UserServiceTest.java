@@ -259,11 +259,8 @@ class UserServiceTest {
         UserResponse result = userService.updateUserProfile(id, update);
 
         assertNotNull(result);
-        assertEquals("Updated", user.getFirstName());
-        assertEquals("User", user.getLastName());
-        assertEquals("updated@example.com", user.getEmail());
-        assertEquals("updated", user.getUsername());
         verify(keycloakUserService).updateProfile(user.getKeycloakId(), update);
+        verify(userMapper).updateUserProfile(update, user);
         verify(userMapper).toResponse(user);
     }
 

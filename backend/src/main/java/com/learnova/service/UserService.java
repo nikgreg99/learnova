@@ -126,10 +126,7 @@ public class UserService {
             throw new UserProfileConflictException("username");
         }
         keycloakUserService.updateProfile(user.getKeycloakId(), request);
-        user.setFirstName(request.firstName());
-        user.setLastName(request.lastName());
-        user.setEmail(request.email());
-        user.setUsername(request.username());
+        userMapper.updateUserProfile(request, user);
         return userMapper.toResponse(user);
     }
 
