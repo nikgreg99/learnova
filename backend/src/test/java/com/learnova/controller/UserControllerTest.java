@@ -3,6 +3,7 @@ package com.learnova.controller;
 
 import com.learnova.dto.user.UserRequest;
 import com.learnova.dto.user.UserResponse;
+import com.learnova.config.security.SecurityConfig;
 import com.learnova.exception.GlobalMessageHandler;
 import com.learnova.exception.UserDeletedException;
 import com.learnova.exception.UserNotFoundException;
@@ -21,11 +22,12 @@ import tools.jackson.databind.json.JsonMapper;
 import java.util.Set;
 
 import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(UserController.class)
-@Import(GlobalMessageHandler.class)
+@Import({GlobalMessageHandler.class, SecurityConfig.class})
 class UserControllerTest {
 
     @Autowired
@@ -97,7 +99,8 @@ class UserControllerTest {
         when(userService.disableUser(1L))
                 .thenReturn(response);
 
-        mockMvc.perform(patch("/api/users/1/disable"))
+        mockMvc.perform(patch("/api/users/1/disable")
+                        .with(jwt()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.status").value("DISABLED"));
@@ -116,7 +119,8 @@ class UserControllerTest {
                 any(java.util.Locale.class)
         )).thenReturn("User with id 99 was not found.");
 
-        mockMvc.perform(patch("/api/users/99/disable"))
+        mockMvc.perform(patch("/api/users/99/disable")
+                        .with(jwt()))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404))
                 .andExpect(jsonPath("$.message")
@@ -134,7 +138,8 @@ class UserControllerTest {
         when(userService.enableUser(1L))
                 .thenReturn(response);
 
-        mockMvc.perform(patch("/api/users/1/enable"))
+        mockMvc.perform(patch("/api/users/1/enable")
+                        .with(jwt()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.status").value("ACTIVE"));
@@ -153,7 +158,8 @@ class UserControllerTest {
                 any(java.util.Locale.class)
         )).thenReturn("User with id 1 has been deleted.");
 
-        mockMvc.perform(patch("/api/users/1/enable"))
+        mockMvc.perform(patch("/api/users/1/enable")
+                        .with(jwt()))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.status").value(409))
                 .andExpect(jsonPath("$.message")
@@ -168,7 +174,8 @@ class UserControllerTest {
     void deleteUser_shouldReturn204NoContent() throws Exception {
         doNothing().when(userService).deleteUser(1L);
 
-        mockMvc.perform(delete("/api/users/1"))
+        mockMvc.perform(delete("/api/users/1")
+                        .with(jwt()))
                 .andExpect(status().isNoContent())
                 .andExpect(content().string(""));
 
@@ -186,7 +193,8 @@ class UserControllerTest {
                 any(java.util.Locale.class)
         )).thenReturn("User with id 99 was not found.");
 
-        mockMvc.perform(delete("/api/users/99"))
+        mockMvc.perform(delete("/api/users/99")
+                        .with(jwt()))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404))
                 .andExpect(jsonPath("$.message")
@@ -195,4 +203,3 @@ class UserControllerTest {
         verify(userService).deleteUser(99L);
     }
 }
-

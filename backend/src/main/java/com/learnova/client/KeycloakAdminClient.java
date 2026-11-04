@@ -8,16 +8,21 @@ import org.jspecify.annotations.NonNull;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.List;
 
 @Component
 public class KeycloakAdminClient {
 
+    private static final int USER_PAGE_SIZE = 100;
     private final RestClient restClient;
     private final KeycloakAdminProperties properties;
 
@@ -55,6 +60,84 @@ public class KeycloakAdminClient {
                 .toBodilessEntity();
 
         return getKeycloakId(response);
+    }
+
+    public void setUserEnabled(String keycloakUserId, boolean enabled) {
+        String accessToken = getAdminToken();
+
+        restClient.put()
+                .uri(adminUserUri(keycloakUserId))
+                .headers(headers -> headers.setBearerAuth(accessToken))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(new UserStatusRepresentation(enabled))
+                .retrieve()
+                .toBodilessEntity();
+    }
+
+    public List<TestUser> findTestUsers() {
+        String accessToken = getAdminToken();
+        List<TestUser> testUsers = new ArrayList<>();
+
+        for (int first = 0; ; first += USER_PAGE_SIZE) {
+            List<KeycloakUserRepresentation> users = restClient.get()
+                    .uri(adminUsersUri() + "?first=" + first
+                            + "&max=" + USER_PAGE_SIZE)
+                    .headers(headers -> headers.setBearerAuth(accessToken))
+                    .retrieve()
+                    .body(new ParameterizedTypeReference<>() {});
+
+            if (users == null || users.isEmpty()) {
+                break;
+            }
+
+            for (KeycloakUserRepresentation user : users) {
+                if (isTestUser(user)) {
+                    testUsers.add(new TestUser(
+                            user.id(),
+                            user.username(),
+                            user.email(),
+                            user.firstName(),
+                            user.lastName(),
+                            user.enabled(),
+                            getRealmRoles(user.id(), accessToken)
+                    ));
+                }
+            }
+
+            if (users.size() < USER_PAGE_SIZE) {
+                break;
+            }
+        }
+
+        return List.copyOf(testUsers);
+    }
+
+    private static boolean isTestUser(KeycloakUserRepresentation user) {
+        return user.id() != null
+                && user.username() != null
+                && user.email() != null
+                && user.username().startsWith("test-");
+    }
+
+    private Set<String> getRealmRoles(
+            String keycloakUserId,
+            String accessToken
+    ) {
+        List<RealmRoleRepresentation> roles = restClient.get()
+                .uri(adminUserUri(keycloakUserId) + "/role-mappings/realm")
+                .headers(headers -> headers.setBearerAuth(accessToken))
+                .retrieve()
+                .body(new ParameterizedTypeReference<>() {});
+
+        if (roles == null) {
+            return Set.of();
+        }
+
+        Set<String> roleNames = new HashSet<>();
+        for (RealmRoleRepresentation role : roles) {
+            roleNames.add(role.name());
+        }
+        return Set.copyOf(roleNames);
     }
 
     private static @NonNull String getKeycloakId(ResponseEntity<Void> response) {
@@ -112,8 +195,12 @@ public class KeycloakAdminClient {
                 + properties.realm() + "/users";
     }
 
+    private String adminUserUri(String keycloakUserId) {
+        return adminUsersUri() + "/" + keycloakUserId;
+    }
+
     private String baseUrl() {
-        return properties.baseUrl().replaceAll("/+$", "");
+        return properties.baseUrl();
     }
 
     private record TokenResponse(
@@ -130,9 +217,36 @@ public class KeycloakAdminClient {
             List<CredentialRepresentation> credentials
     ) {}
 
+    private record UserStatusRepresentation(
+            boolean enabled
+    ) {}
+
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+    private record KeycloakUserRepresentation(
+            String id,
+            String username,
+            String email,
+            String firstName,
+            String lastName,
+            boolean enabled
+    ) {}
+
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+    private record RealmRoleRepresentation(String name) {}
+
     private record CredentialRepresentation(
             String type,
             String value,
             boolean temporary
+    ) {}
+
+    public record TestUser(
+            String keycloakId,
+            String username,
+            String email,
+            String firstName,
+            String lastName,
+            boolean enabled,
+            Set<String> realmRoles
     ) {}
 }

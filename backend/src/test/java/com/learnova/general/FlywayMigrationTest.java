@@ -1,4 +1,4 @@
-package com.learnova;
+package com.learnova.general;
 
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.MigrationInfo;

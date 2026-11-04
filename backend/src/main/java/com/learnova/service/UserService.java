@@ -86,6 +86,8 @@ public class UserService {
 
     public UserResponse disableUser(Long id) {
         User user = getUserOrThrow(id);
+        ensureUserNotDeleted(user);
+        keycloakUserService.setEnabled(user.getKeycloakId(), false);
         user.setStatus(UserStatus.DISABLED);
 
         return userMapper.toResponse(user);
@@ -96,6 +98,7 @@ public class UserService {
         User user = getUserOrThrow(id);
 
         ensureUserNotDeleted(user);
+        keycloakUserService.setEnabled(user.getKeycloakId(), true);
         user.setStatus(UserStatus.ACTIVE);
 
         return userMapper.toResponse(user);
@@ -106,6 +109,7 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
         ensureUserNotDeleted(user);
+        keycloakUserService.setEnabled(user.getKeycloakId(), false);
         user.setStatus(UserStatus.DELETED);
     }
 

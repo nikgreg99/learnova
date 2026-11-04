@@ -26,9 +26,9 @@ CREATE TABLE user_role (
                                    ON DELETE CASCADE
 );
 
--- Insert initial roles
+-- Seed the role table with the application's built-in user roles.
 INSERT INTO role (name, description)
 VALUES
-    ('STUDENT', 'Studente'),
-    ('INSTRUCTOR', 'Docente'),
-    ('ADMIN', 'Amministratore');
+    ('STUDENT', 'Accesses learning resources and courses'),
+    ('INSTRUCTOR', 'Creates and manages courses'),
+    ('ADMIN', 'Manages users and platform settings');

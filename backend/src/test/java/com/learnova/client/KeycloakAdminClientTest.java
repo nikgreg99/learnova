@@ -14,6 +14,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 
 import java.net.URI;
+import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -44,22 +45,16 @@ class KeycloakAdminClientTest {
                 .bindTo(builder)
                 .build();
 
-        KeycloakAdminProperties properties = org.mockito.Mockito.mock(
-                KeycloakAdminProperties.class,
-                org.mockito.Mockito.RETURNS_DEEP_STUBS
+        KeycloakAdminProperties properties = new KeycloakAdminProperties(
+                "http",
+                "localhost",
+                8081,
+                REALM,
+                new KeycloakAdminProperties.Admin(
+                        "learnova-admin-client",
+                        "test-client-secret"
+                )
         );
-
-        org.mockito.Mockito.when(properties.baseUrl())
-                .thenReturn(BASE_URL);
-
-        org.mockito.Mockito.when(properties.realm())
-                .thenReturn(REALM);
-
-        org.mockito.Mockito.when(properties.admin().clientId())
-                .thenReturn("learnova-admin-client");
-
-        org.mockito.Mockito.when(properties.admin().clientSecret())
-                .thenReturn("test-client-secret");
 
         keycloakAdminClient = new KeycloakAdminClient(
                 builder,
@@ -115,6 +110,116 @@ class KeycloakAdminClientTest {
 
         // Assert
         assertThat(result).isEqualTo(KEYCLOAK_USER_ID);
+        mockServer.verify();
+    }
+
+    @Test
+    void setUserEnabled_shouldUpdateKeycloakAccountStatus() {
+        mockTokenResponse();
+
+        mockServer.expect(requestTo(
+                        BASE_URL + "/admin/realms/" + REALM
+                                + "/users/" + KEYCLOAK_USER_ID
+                ))
+                .andExpect(method(HttpMethod.PUT))
+                .andExpect(header(
+                        HttpHeaders.AUTHORIZATION,
+                        "Bearer " + ACCESS_TOKEN
+                ))
+                .andExpect(content().contentType(
+                        MediaType.APPLICATION_JSON
+                ))
+                .andExpect(content().json("""
+                        {"enabled": false}
+                        """))
+                .andRespond(withSuccess());
+
+        keycloakAdminClient.setUserEnabled(KEYCLOAK_USER_ID, false);
+
+        mockServer.verify();
+    }
+
+    @Test
+    void setUserEnabled_shouldEnableKeycloakAccount() {
+        mockTokenResponse();
+
+        mockServer.expect(requestTo(
+                        BASE_URL + "/admin/realms/" + REALM
+                                + "/users/" + KEYCLOAK_USER_ID
+                ))
+                .andExpect(method(HttpMethod.PUT))
+                .andExpect(content().json("""
+                        {"enabled": true}
+                        """))
+                .andRespond(withSuccess());
+
+        keycloakAdminClient.setUserEnabled(KEYCLOAK_USER_ID, true);
+
+        mockServer.verify();
+    }
+
+    @Test
+    void findTestUsers_shouldReturnOnlyTestAccountsWithRealmRoles() {
+        mockTokenResponse();
+
+        mockServer.expect(requestTo(
+                        BASE_URL + "/admin/realms/" + REALM
+                                + "/users?first=0&max=100"
+                ))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(header(
+                        HttpHeaders.AUTHORIZATION,
+                        "Bearer " + ACCESS_TOKEN
+                ))
+                .andRespond(withSuccess(
+                        """
+                        [
+                          {
+                            "id": "test-user-1",
+                            "username": "test-student",
+                            "email": "test-student@learnova.local",
+                            "firstName": "Test",
+                            "lastName": "Student",
+                            "enabled": true
+                          },
+                          {
+                            "id": "regular-user",
+                            "username": "regular-user",
+                            "email": "regular@learnova.local",
+                            "enabled": true
+                          }
+                        ]
+                        """,
+                        MediaType.APPLICATION_JSON
+                ));
+
+        mockServer.expect(requestTo(
+                        BASE_URL + "/admin/realms/" + REALM
+                                + "/users/test-user-1/role-mappings/realm"
+                ))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(header(
+                        HttpHeaders.AUTHORIZATION,
+                        "Bearer " + ACCESS_TOKEN
+                ))
+                .andRespond(withSuccess(
+                        """
+                        [
+                          {"id": "role-student", "name": "STUDENT"},
+                          {"id": "default-role", "name": "default-roles-learnova"}
+                        ]
+                        """,
+                        MediaType.APPLICATION_JSON
+                ));
+
+        List<KeycloakAdminClient.TestUser> users =
+                keycloakAdminClient.findTestUsers();
+
+        assertThat(users).hasSize(1);
+        assertThat(users.getFirst().keycloakId()).isEqualTo("test-user-1");
+        assertThat(users.getFirst().username()).isEqualTo("test-student");
+        assertThat(users.getFirst().realmRoles())
+                .containsExactlyInAnyOrder("STUDENT", "default-roles-learnova");
         mockServer.verify();
     }
 

@@ -1,8 +1,33 @@
+
 package com.learnova.controller;
+
+import com.learnova.config.security.SecurityConfig;
+import com.learnova.dto.course.CourseRequest;
+import com.learnova.dto.course.CourseResponse;
+import com.learnova.service.CourseService;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+
+import tools.jackson.databind.json.JsonMapper;
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -10,36 +35,17 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Optional;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.security.oauth2.client.autoconfigure.OAuth2ClientAutoConfiguration;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
-
-import com.learnova.dto.course.CourseRequest;
-import com.learnova.dto.course.CourseResponse;
-import com.learnova.service.CourseService;
-import tools.jackson.databind.json.JsonMapper;
-
-@WebMvcTest(
-        controllers = CourseController.class,
-        excludeAutoConfiguration = OAuth2ClientAutoConfiguration.class
-)
+@WebMvcTest(controllers = CourseController.class)
+@Import(SecurityConfig.class)
 @ActiveProfiles("test")
-public class CourseControllerTest {
+class CourseControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
     @Autowired
     private JsonMapper objectMapper;
+
     @MockitoBean
     private CourseService courseService;
 
@@ -51,7 +57,8 @@ public class CourseControllerTest {
         courseRequest = new CourseRequest(
                 "Java Fundamentals",
                 "Introduction to Java",
-                new BigDecimal("49.90"));
+                new BigDecimal("49.90")
+        );
 
         courseResponse = new CourseResponse(
                 1L,
@@ -59,14 +66,27 @@ public class CourseControllerTest {
                 courseRequest.description(),
                 courseRequest.price(),
                 null,
-                null);
+                null
+        );
+    }
+
+    @Test
+    void getCourses_shouldReturnUnauthorizedWhenUserIsNotAuthenticated()
+            throws Exception {
+
+        mockMvc.perform(get("/api/courses"))
+                .andExpect(status().isUnauthorized());
+
+        verifyNoInteractions(courseService);
     }
 
     @Test
     void getCourses_shouldReturnCoursesWhenCoursesExist() throws Exception {
-        when(courseService.getCourses()).thenReturn(List.of(courseResponse));
+        when(courseService.getCourses())
+                .thenReturn(List.of(courseResponse));
 
-        mockMvc.perform(get("/api/courses"))
+        mockMvc.perform(get("/api/courses")
+                        .with(jwt()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$.length()").value(1))
@@ -75,9 +95,11 @@ public class CourseControllerTest {
 
     @Test
     void getCourses_shouldReturnEmptyListWhenNoCoursesExist() throws Exception {
-        when(courseService.getCourses()).thenReturn(List.of());
+        when(courseService.getCourses())
+                .thenReturn(List.of());
 
-        mockMvc.perform(get("/api/courses"))
+        mockMvc.perform(get("/api/courses")
+                        .with(jwt()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$.length()").value(0));
@@ -85,9 +107,11 @@ public class CourseControllerTest {
 
     @Test
     void getCourse_shouldReturnCourseWhenCourseExists() throws Exception {
-        when(courseService.getCourseById(courseResponse.id())).thenReturn(Optional.of(courseResponse));
+        when(courseService.getCourseById(courseResponse.id()))
+                .thenReturn(Optional.of(courseResponse));
 
-        mockMvc.perform(get("/api/courses/{id}", courseResponse.id()))
+        mockMvc.perform(get("/api/courses/{id}", courseResponse.id())
+                        .with(jwt()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(courseResponse.id()))
                 .andExpect(jsonPath("$.name").value(courseResponse.name()));
@@ -96,19 +120,24 @@ public class CourseControllerTest {
     @Test
     void getCourse_shouldReturnNotFoundWhenCourseDoesNotExist() throws Exception {
         Long nonExistingId = 999L;
-        when(courseService.getCourseById(nonExistingId)).thenReturn(Optional.empty());
 
-        mockMvc.perform(get("/api/courses/{id}", nonExistingId))
+        when(courseService.getCourseById(nonExistingId))
+                .thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/api/courses/{id}", nonExistingId)
+                        .with(jwt()))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     void createCourse_shouldCreateCourseWhenRequestIsValid() throws Exception {
-        when(courseService.addCourse(courseRequest)).thenReturn(courseResponse);
+        when(courseService.addCourse(courseRequest))
+                .thenReturn(courseResponse);
 
         mockMvc.perform(post("/api/courses")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(courseRequest)))
+                        .with(jwt())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(courseRequest)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(courseResponse.id()))
                 .andExpect(jsonPath("$.name").value(courseRequest.name()));
@@ -119,11 +148,13 @@ public class CourseControllerTest {
         CourseRequest invalidRequest = new CourseRequest(
                 "",
                 "Introduction to Java",
-                new BigDecimal("49.90"));
+                new BigDecimal("49.90")
+        );
 
         mockMvc.perform(post("/api/courses")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(invalidRequest)))
+                        .with(jwt())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest());
 
         verifyNoInteractions(courseService);
@@ -131,29 +162,36 @@ public class CourseControllerTest {
 
     @Test
     void updateCourse_shouldUpdateCourseWhenCourseExists() throws Exception {
-        when(courseService.updateCourse(courseResponse.id(), courseRequest)).thenReturn(Optional.of(courseResponse));
+        when(courseService.updateCourse(courseResponse.id(), courseRequest))
+                .thenReturn(Optional.of(courseResponse));
 
         mockMvc.perform(put("/api/courses/{id}", courseResponse.id())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(courseRequest)))
+                        .with(jwt())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(courseRequest)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(courseResponse.id()))
                 .andExpect(jsonPath("$.name").value(courseResponse.name()));
     }
 
     @Test
-    void updateCourse_shouldReturnNotFoundWhenUpdatingNonExistingCourse() throws Exception {
-        when(courseService.updateCourse(courseResponse.id(), courseRequest)).thenReturn(Optional.empty());
+    void updateCourse_shouldReturnNotFoundWhenUpdatingNonExistingCourse()
+            throws Exception {
+
+        when(courseService.updateCourse(courseResponse.id(), courseRequest))
+                .thenReturn(Optional.empty());
 
         mockMvc.perform(put("/api/courses/{id}", courseResponse.id())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(courseRequest)))
+                        .with(jwt())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(courseRequest)))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     void deleteCourse_shouldDeleteCourseWhenCourseExists() throws Exception {
-        mockMvc.perform(delete("/api/courses/{id}", courseResponse.id()))
+        mockMvc.perform(delete("/api/courses/{id}", courseResponse.id())
+                        .with(jwt()))
                 .andExpect(status().isNoContent());
 
         verify(courseService).deleteCourseById(courseResponse.id());

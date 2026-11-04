@@ -1,4 +1,4 @@
-package com.learnova;
+package com.learnova.general;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

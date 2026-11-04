@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -67,8 +68,9 @@ public class UserController {
 
     @Operation(
             summary = "Disable a user",
-            description = "Disables an existing user by their unique identifier."
+            description = "Disables an existing user in Learnova and Keycloak."
     )
+    @SecurityRequirement(name = "bearerAuth")
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
@@ -99,8 +101,9 @@ public class UserController {
 
     @Operation(
             summary = "Enable a user",
-            description = "Enables an existing user by their unique identifier."
+            description = "Enables an existing user in Learnova and Keycloak."
     )
+    @SecurityRequirement(name = "bearerAuth")
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
@@ -131,8 +134,9 @@ public class UserController {
 
     @Operation(
             summary = "Delete a user",
-            description = "Permanently deletes a user by their unique identifier."
+            description = "Soft-deletes a user in Learnova and disables their Keycloak account."
     )
+    @SecurityRequirement(name = "bearerAuth")
     @ApiResponses({
             @ApiResponse(
                     responseCode = "204",

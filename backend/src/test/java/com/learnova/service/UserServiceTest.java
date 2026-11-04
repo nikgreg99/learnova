@@ -167,6 +167,7 @@ class UserServiceTest {
         assertEquals(UserStatus.DISABLED, user.getStatus());
         assertNotNull(result);
 
+        verify(keycloakUserService).setEnabled(user.getKeycloakId(), false);
         verify(userRepository).findById(id);
         verify(userMapper).toResponse(user);
     }
@@ -183,6 +184,44 @@ class UserServiceTest {
                 () -> userService.disableUser(id)
         );
 
+        verifyNoInteractions(keycloakUserService);
+        verify(userMapper, never()).toResponse(any());
+    }
+
+    @Test
+    void disableUser_shouldRejectDeletedUserWithoutChangingKeycloak() {
+        Long id = 1L;
+        User user = createUser(id, UserStatus.DELETED);
+
+        when(userRepository.findById(id))
+                .thenReturn(Optional.of(user));
+
+        assertThrows(
+                UserDeletedException.class,
+                () -> userService.disableUser(id)
+        );
+
+        verifyNoInteractions(keycloakUserService);
+        verify(userMapper, never()).toResponse(any());
+    }
+
+    @Test
+    void disableUser_shouldKeepLocalStatusWhenKeycloakUpdateFails() {
+        Long id = 1L;
+        User user = createUser(id, UserStatus.ACTIVE);
+
+        when(userRepository.findById(id))
+                .thenReturn(Optional.of(user));
+        doThrow(new IllegalStateException("Keycloak update failed"))
+                .when(keycloakUserService)
+                .setEnabled(user.getKeycloakId(), false);
+
+        assertThrows(
+                IllegalStateException.class,
+                () -> userService.disableUser(id)
+        );
+
+        assertEquals(UserStatus.ACTIVE, user.getStatus());
         verify(userMapper, never()).toResponse(any());
     }
 
@@ -204,6 +243,7 @@ class UserServiceTest {
         assertEquals(UserStatus.ACTIVE, user.getStatus());
         assertNotNull(result);
 
+        verify(keycloakUserService).setEnabled(user.getKeycloakId(), true);
         verify(userRepository).findById(id);
         verify(userMapper).toResponse(user);
     }
@@ -220,6 +260,7 @@ class UserServiceTest {
                 () -> userService.enableUser(id)
         );
 
+        verifyNoInteractions(keycloakUserService);
         verify(userMapper, never()).toResponse(any());
     }
 
@@ -238,6 +279,7 @@ class UserServiceTest {
 
         assertEquals(UserStatus.DELETED, user.getStatus());
 
+        verifyNoInteractions(keycloakUserService);
         verify(userMapper, never()).toResponse(any());
     }
 
@@ -255,6 +297,7 @@ class UserServiceTest {
 
         assertEquals(UserStatus.DELETED, user.getStatus());
 
+        verify(keycloakUserService).setEnabled(user.getKeycloakId(), false);
         verify(userRepository).findById(id);
         verify(userRepository, never()).delete(any(User.class));
     }
@@ -271,6 +314,7 @@ class UserServiceTest {
                 () -> userService.deleteUser(id)
         );
 
+        verifyNoInteractions(keycloakUserService);
         verify(userRepository, never()).delete(any(User.class));
     }
 
@@ -289,12 +333,14 @@ class UserServiceTest {
 
         assertEquals(UserStatus.DELETED, user.getStatus());
 
+        verifyNoInteractions(keycloakUserService);
         verify(userRepository, never()).delete(any(User.class));
     }
 
     private User createUser(Long id, UserStatus status) {
         User user = new User();
         user.setId(id);
+        user.setKeycloakId("keycloak-" + id);
         user.setStatus(status);
         return user;
     }

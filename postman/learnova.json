@@ -1,8 +1,8 @@
 {
   "info": {
-    "_postman_id": "9ae4950e-d155-4f42-b10c-77c9d6513389",
+    "_postman_id": "551c3e61-a411-4a74-a566-b760d94d610a",
     "name": "Learnova LMS API",
-    "description": "## Learnova LMS API\n\nThis collection covers the core REST API endpoints for **Learnova**, a Learning Management System (LMS). It is organized into three functional areas — Authentication, User Management, and Course Management — and targets a backend running at `http://localhost:8080`.\n\n### Folders\n\n**Authentication**\nHandles session-related operations for authenticated users:\n- `Get current user` — Retrieves the profile of the currently logged-in user\n- `Logout` — Terminates the active user session\n\n**Users**\nProvides full lifecycle management for user accounts:\n- `Create user` — Registers a new user in the system\n- `Get users` — Returns a list of all users\n- `Get user by ID` — Fetches a specific user's details\n- `Enable user` — Reactivates a previously disabled account\n- `Disable user` — Suspends a user account\n- `Soft delete user` — Marks a user as deleted without permanently removing them\n\n**Courses**\nManages the course catalog available on the platform:\n- `Get courses` — Lists all available courses\n- `Get course by ID` — Retrieves details for a specific course\n- `Create course` — Adds a new course to the catalog\n- `Update course` — Modifies an existing course's information\n- `Delete course` — Removes a course from the catalog\n\n### Collection variables\nKey variables are pre-configured for convenience: `baseUrl`, `userId`, `courseId`, `courseName`, `courseDescription`, `coursePrice`, and `JSESSIONID` for session-based authentication.",
+    "description": "Learnova REST API collection. Protected requests inherit the collection OAuth 2.0 Authorization Code + PKCE (S256) settings. Select Get New Access Token and Use Token in Postman. Local test account: test-student.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "12861475"
   },
@@ -21,42 +21,24 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/auth/me",
+              "raw": "{{proto}}://{{host}}:{{port}}/api/auth/me",
+              "protocol": "{{proto}}",
               "host": [
-                "{{baseUrl}}"
+                "{{host}}"
               ],
+              "port": "{{port}}",
               "path": [
                 "api",
                 "auth",
                 "me"
               ]
             },
-            "description": "Richiede una sessione autenticata. Effettua prima il login tramite il flusso OAuth2 configurato."
-          },
-          "response": []
-        },
-        {
-          "name": "Logout",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/auth/logout",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "logout"
-              ]
-            },
-            "description": "Il logout può richiedere il cookie di sessione e/o un token CSRF, secondo la configurazione Spring Security."
+            "description": "Restituisce il profilo associato al JWT di accesso ricevuto da Keycloak."
           },
           "response": []
         }
       ],
-      "description": "## Authentication\n\nThis folder handles session and authentication management for the Learnova LMS API. The backend uses OAuth2 with Keycloak via the BFF (Backend for Frontend) pattern, meaning authentication state is managed server-side through secure session cookies.\n\n### Requests\n\n- **Get current user** — Retrieves the profile and session information of the currently authenticated user. Useful for verifying that a valid session is active and for fetching identity details (e.g., roles, username) after login.\n\n- **Logout** — Terminates the current user session by invalidating the server-side session and revoking the associated Keycloak tokens. After a successful logout, subsequent requests requiring authentication will be rejected until the user logs in again."
+      "description": "Autenticazione e profilo utente.\n\nEndpoint inclusi:\n- GET /api/auth/me — restituisce il profilo dell'utente associato al token Keycloak.\n\nRichiede il Bearer token ottenuto tramite la configurazione OAuth 2.0 della collection. Account di test locale: {{testAccountName}}."
     },
     {
       "name": "Users",
@@ -64,20 +46,19 @@
         {
           "name": "Create user",
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
-                "value": "{{Content-Type}}"
-              },
-              {
-                "key": "Cookie",
-                "value": "JSESSIONID={{JSESSIONID}}"
+                "value": "application/json"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"firstName\": \"{{userFirstName}}\",\n  \"lastName\": \"{{userLastName}}\",\n  \"email\": \"{{userEmail}}\",\n  \"username\": \"{{userUsername}}\",\n  \"roles\": [\n    \"{{userRole}}\"\n  ],\n  \"password\": \"{{userPassword}}\"\n}",
+              "raw": "{\n  \"firstName\": \"{{userFirstName}}\",\n  \"lastName\": \"{{userLastName}}\",\n  \"email\": \"{{userEmail}}\",\n  \"username\": \"{{userUsername}}\",\n  \"password\": \"{{userPassword}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -85,55 +66,18 @@
               }
             },
             "url": {
-              "raw": "{{proto}}://{{host}}: {{port}}/api/users",
+              "raw": "{{proto}}://{{host}}:{{port}}/api/users",
               "protocol": "{{proto}}",
               "host": [
                 "{{host}}"
               ],
-              "port": " {{port}}",
+              "port": "{{port}}",
               "path": [
                 "api",
                 "users"
               ]
             },
-            "description": "Il servizio può assegnare STUDENT se roles è omesso/vuoto, in base alla logica implementata. Non usare ruoli privilegiati in registrazione pubblica."
-          },
-          "response": []
-        },
-        {
-          "name": "Get users",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/users",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "users"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get user by ID",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/users/{{userId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "users",
-                "{{userId}}"
-              ]
-            }
+            "description": "Endpoint pubblico di registrazione. Omette roles così il servizio assegna il ruolo STUDENT predefinito."
           },
           "response": []
         },
@@ -143,10 +87,12 @@
             "method": "PATCH",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/users/{{userId}}/disable",
+              "raw": "{{proto}}://{{host}}:{{port}}/api/users/{{userId}}/disable",
+              "protocol": "{{proto}}",
               "host": [
-                "{{baseUrl}}"
+                "{{host}}"
               ],
+              "port": "{{port}}",
               "path": [
                 "api",
                 "users",
@@ -163,10 +109,12 @@
             "method": "PATCH",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/users/{{userId}}/enable",
+              "raw": "{{proto}}://{{host}}:{{port}}/api/users/{{userId}}/enable",
+              "protocol": "{{proto}}",
               "host": [
-                "{{baseUrl}}"
+                "{{host}}"
               ],
+              "port": "{{port}}",
               "path": [
                 "api",
                 "users",
@@ -183,22 +131,24 @@
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/users/{{userId}}",
+              "raw": "{{proto}}://{{host}}:{{port}}/api/users/{{userId}}",
+              "protocol": "{{proto}}",
               "host": [
-                "{{baseUrl}}"
+                "{{host}}"
               ],
+              "port": "{{port}}",
               "path": [
                 "api",
                 "users",
                 "{{userId}}"
               ]
             },
-            "description": "Imposta lo stato DELETED; non elimina fisicamente il record. Richiede autorizzazioni amministrative."
+            "description": "Imposta lo stato DELETED senza eliminare fisicamente il record. Richiede un JWT valido."
           },
           "response": []
         }
       ],
-      "description": "Endpoints for managing user accounts within the Learnova LMS platform. This folder covers the full lifecycle of a user, including:\n\n- **Create user** – Register a new user in the system.\n    \n- **Get users** – Retrieve a paginated list of all users.\n    \n- **Get user by ID** – Fetch the details of a specific user.\n    \n- **Enable user** – Reactivate a previously disabled user account.\n    \n- **Disable user** – Temporarily deactivate a user account without removing it.\n    \n- **Soft delete user** – Mark a user as deleted while preserving their data in the system."
+      "description": "Registrazione e gestione degli utenti.\n\nEndpoint inclusi:\n- POST /api/users — crea un utente; endpoint pubblico, assegna STUDENT se roles è omesso.\n- PATCH /api/users/{{userId}}/disable — disabilita l'utente nel database Learnova e in Keycloak.\n- PATCH /api/users/{{userId}}/enable — riabilita l'utente sia in Learnova sia in Keycloak.\n- DELETE /api/users/{{userId}} — imposta DELETED in Learnova e disabilita l'account Keycloak (soft delete).\n\nLe operazioni diverse dalla registrazione richiedono l'autenticazione Bearer della collection."
     },
     {
       "name": "Courses",
@@ -209,10 +159,12 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/courses",
+              "raw": "{{proto}}://{{host}}:{{port}}/api/courses",
+              "protocol": "{{proto}}",
               "host": [
-                "{{baseUrl}}"
+                "{{host}}"
               ],
+              "port": "{{port}}",
               "path": [
                 "api",
                 "courses"
@@ -227,10 +179,12 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/courses/{{courseId}}",
+              "raw": "{{proto}}://{{host}}:{{port}}/api/courses/{{courseId}}",
+              "protocol": "{{proto}}",
               "host": [
-                "{{baseUrl}}"
+                "{{host}}"
               ],
+              "port": "{{port}}",
               "path": [
                 "api",
                 "courses",
@@ -247,11 +201,7 @@
             "header": [
               {
                 "key": "Content-Type",
-                "value": "{{Content-Type}}"
-              },
-              {
-                "key": "Cookie",
-                "value": "JSESSIONID={{JSESSIONID}}"
+                "value": "application/json"
               }
             ],
             "body": {
@@ -264,12 +214,12 @@
               }
             },
             "url": {
-              "raw": "{{proto}}://{{host}}: {{port}}/api/courses",
+              "raw": "{{proto}}://{{host}}:{{port}}/api/courses",
               "protocol": "{{proto}}",
               "host": [
                 "{{host}}"
               ],
-              "port": " {{port}}",
+              "port": "{{port}}",
               "path": [
                 "api",
                 "courses"
@@ -281,11 +231,11 @@
         {
           "name": "Update course",
           "request": {
-            "method": "PATCH",
+            "method": "PUT",
             "header": [
               {
                 "key": "Content-Type",
-                "value": "{{Content-Type}}"
+                "value": "application/json"
               }
             ],
             "body": {
@@ -298,12 +248,12 @@
               }
             },
             "url": {
-              "raw": "{{proto}}://{{host}}: {{port}}/api/courses/{{courseId}}",
+              "raw": "{{proto}}://{{host}}:{{port}}/api/courses/{{courseId}}",
               "protocol": "{{proto}}",
               "host": [
                 "{{host}}"
               ],
-              "port": " {{port}}",
+              "port": "{{port}}",
               "path": [
                 "api",
                 "courses",
@@ -319,10 +269,12 @@
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/courses/{{courseId}}",
+              "raw": "{{proto}}://{{host}}:{{port}}/api/courses/{{courseId}}",
+              "protocol": "{{proto}}",
               "host": [
-                "{{baseUrl}}"
+                "{{host}}"
               ],
+              "port": "{{port}}",
               "path": [
                 "api",
                 "courses",
@@ -333,33 +285,85 @@
           "response": []
         }
       ],
-      "description": "Endpoints for managing courses within the Learnova LMS platform. This folder covers the full lifecycle of a course resource, including:\n\n- **List courses** – retrieve all available courses (`GET /api/courses`)\n- **Get course by ID** – fetch the details of a specific course (`GET /api/courses/:courseId`)\n- **Create course** – add a new course to the platform (`POST /api/courses`)\n- **Update course** – partially modify an existing course (`PATCH /api/courses/:courseId`)\n- **Delete course** – remove a course from the system (`DELETE /api/courses/:courseId`)\n\nThe `{{courseId}}` collection variable is used to target a specific course across the relevant requests."
+      "description": "Lettura e gestione del catalogo corsi.\n\nEndpoint inclusi:\n- GET /api/courses — elenca i corsi.\n- GET /api/courses/{{courseId}} — recupera un corso.\n- POST /api/courses — crea un corso.\n- PUT /api/courses/{{courseId}} — aggiorna un corso.\n- DELETE /api/courses/{{courseId}} — elimina un corso.\n\nTutti gli endpoint richiedono il Bearer token della collection."
     }
   ],
+  "auth": {
+    "type": "oauth2",
+    "oauth2": [
+      {
+        "key": "clientId",
+        "value": "{{auth_secret_07a7}}",
+        "type": "string"
+      },
+      {
+        "key": "accessTokenUrl",
+        "value": "{{keycloakScheme}}://{{keycloakHost}}:{{keycloakPort}}/realms/{{keycloakRealm}}/protocol/openid-connect/token",
+        "type": "string"
+      },
+      {
+        "key": "authUrl",
+        "value": "{{keycloakScheme}}://{{keycloakHost}}:{{keycloakPort}}/realms/{{keycloakRealm}}/protocol/openid-connect/auth",
+        "type": "string"
+      },
+      {
+        "key": "addTokenTo",
+        "value": "header",
+        "type": "string"
+      },
+      {
+        "key": "scope",
+        "value": "openid profile email",
+        "type": "string"
+      },
+      {
+        "key": "grant_type",
+        "value": "authorization_code_with_pkce",
+        "type": "string"
+      },
+      {
+        "key": "redirect_uri",
+        "value": "https://oauth.pstmn.io/v1/callback",
+        "type": "string"
+      }
+    ]
+  },
   "variable": [
+    {
+      "key": "proto",
+      "value": "http"
+    },
+    {
+      "key": "host",
+      "value": "localhost"
+    },
+    {
+      "key": "port",
+      "value": "8080"
+    },
+    {
+      "key": "keycloakScheme",
+      "value": "http"
+    },
+    {
+      "key": "keycloakHost",
+      "value": "localhost"
+    },
+    {
+      "key": "keycloakPort",
+      "value": "8081"
+    },
+    {
+      "key": "keycloakRealm",
+      "value": "learnova"
+    },
     {
       "key": "courseId",
       "value": "1"
     },
     {
-      "key": "proto",
-      "value": ""
-    },
-    {
-      "key": "host",
-      "value": ""
-    },
-    {
-      "key": "port",
-      "value": ""
-    },
-    {
       "key": "userId",
       "value": "1"
-    },
-    {
-      "key": "Accept",
-      "value": ""
     },
     {
       "key": "courseName",
@@ -390,20 +394,16 @@
       "value": "mrossi"
     },
     {
-      "key": "userRole",
-      "value": "STUDENT"
+      "key": "testAccountName",
+      "value": "test-student"
     },
     {
       "key": "userPassword",
-      "value": "ChangeMe123!"
-    },
-    {
-      "key": "JSESSIONID",
       "value": ""
     },
     {
-      "key": "Content-Type",
-      "value": "application/json"
+      "key": "auth_secret_07a7",
+      "secret": true
     }
   ]
 }

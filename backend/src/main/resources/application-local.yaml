@@ -13,5 +13,5 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8081/realms/learnova}
-          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8081/realms/learnova/protocol/openid-connect/certs}
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:${KEYCLOAK_SCHEME:http}://${KEYCLOAK_HOST:localhost}:${KEYCLOAK_PORT:8081}/realms/${KEYCLOAK_REALM:learnova}}
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:${KEYCLOAK_SCHEME:http}://${KEYCLOAK_HOST:localhost}:${KEYCLOAK_PORT:8081}/realms/${KEYCLOAK_REALM:learnova}/protocol/openid-connect/certs}

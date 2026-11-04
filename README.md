@@ -19,8 +19,19 @@ When the application is running, you can access the documentation at:
 
 1. Navigate to `http://localhost:8080/swagger-ui.html` in your browser.
 2. Expand the **Courses** tag to view all available course management endpoints (`GET`, `POST`, `PUT`, `DELETE`).
-3. Click on any endpoint, select **Try it out**, fill in parameters or the sample payload, and click **Execute** to send requests to the API.
-4. Inspect the expected responses and HTTP status codes (`200 OK`, `201 Created`, `400 Bad Request`, `404 Not Found`).
+3. Use **Authorize** to provide a Keycloak access token with the HTTP bearer authentication scheme.
+4. Click on any endpoint, select **Try it out**, fill in parameters or the sample payload, and click **Execute** to send requests to the API.
+5. Inspect the expected responses and HTTP status codes (`200 OK`, `201 Created`, `400 Bad Request`, `404 Not Found`).
+
+### Testing with Postman
+
+Import `postman/learnova.json`. The collection uses the `learnova-postman` Keycloak client and Authorization Code with PKCE (S256); its default URLs target the local API at `http://localhost:8080` and Keycloak at `http://localhost:8081`.
+
+1. Start the Docker Compose services and open the collection's **Authorization** tab. OAuth 2.0 Authorization Code with PKCE (S256) is preconfigured for client `learnova-postman`, the Keycloak token endpoints, and Postman's callback URL. The public client requires no client secret.
+2. Select **Get New Access Token**, sign in to Keycloak with the local test account `test-student` (password: `LearnovaLocal123!`, as defined in the imported development realm), then select **Use Token**. Postman stores the token for the collection and automatically adds it to protected requests; no manual token copying is needed.
+3. **Create user** is public and intentionally omits `roles`, so the API assigns the default `STUDENT` role. User-management operations and course endpoints inherit the collection's access token.
+
+The realm import configures the Postman client for Postman's desktop (`https://oauth.pstmn.io/v1/callback`) and web (`https://oauth.pstmn.io/v1/browser-callback`) callback URLs with PKCE. The backend service account has `manage-users` to provision and enable/disable identities, plus `query-users` and `view-users` to find and read test accounts. At backend startup, enabled synchronization (`KEYCLOAK_SYNC_TEST_USERS=true`) imports Keycloak users whose usernames start with `test-` into the application database; this includes the imported `test-student` account and other test accounts created in the realm. If Keycloak reports `invalid_redirect_uri`, make sure Postman's configured callback URL exactly matches one of the configured URLs. Keycloak imports realms on first initialization; an existing persistent Keycloak database may not pick up changes to the import file. In that case update the client and its service-account role in the Keycloak Admin Console, or recreate only disposable local Keycloak data after backing up anything you need.
 
 ### Environment Configuration
 

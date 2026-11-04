@@ -4,22 +4,18 @@ spring:
 
   security:
     oauth2:
-      client:
-        registration:
-          keycloak:
-            provider: keycloak
-            client-id: ${KEYCLOAK_CLIENT_ID}
-            client-secret: ${KEYCLOAK_CLIENT_SECRET}
-            authorization-grant-type: authorization_code
-            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
-            scope:
-              - openid
-              - profile
-              - email
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:${KEYCLOAK_SCHEME:http}://${KEYCLOAK_HOST:localhost}:${KEYCLOAK_PORT:8081}/realms/${KEYCLOAK_REALM:learnova}}
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:${KEYCLOAK_SCHEME:http}://${KEYCLOAK_HOST:localhost}:${KEYCLOAK_PORT:8081}/realms/${KEYCLOAK_REALM:learnova}/protocol/openid-connect/certs}
 
-        provider:
-          keycloak:
-            issuer-uri: ${KEYCLOAK_ISSUER_URI}
+keycloak:
+  scheme: ${KEYCLOAK_SCHEME:http}
+  host: ${KEYCLOAK_HOST:localhost}
+  port: ${KEYCLOAK_PORT:8081}
+  realm: ${KEYCLOAK_REALM:learnova}
+  sync-test-users:
+    enabled: ${KEYCLOAK_SYNC_TEST_USERS:false}
 
   jpa:
     database: POSTGRESQL

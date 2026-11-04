@@ -1,23 +1,7 @@
 spring:
   security:
     oauth2:
-      client:
-        registration:
-          keycloak:
-            provider: keycloak
-            client-id: learnova-backend
-            client-secret: test-client-secret
-            authorization-grant-type: authorization_code
-            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
-            scope:
-              - openid
-              - profile
-              - email
-
-        provider:
-          keycloak:
-            authorization-uri: http://localhost:9999/authorize
-            token-uri: http://localhost:9999/token
-            user-info-uri: http://localhost:9999/userinfo
-            user-name-attribute: sub
-            jwk-set-uri: http://localhost:9999/certs
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:9999
+          jwk-set-uri: http://localhost:9999/certs

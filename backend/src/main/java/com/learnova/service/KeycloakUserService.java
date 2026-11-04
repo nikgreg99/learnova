@@ -17,4 +17,8 @@ public class KeycloakUserService {
         return keycloakClient.createUser(request);
     }
 
+    public void setEnabled(String keycloakUserId, boolean enabled) {
+        keycloakClient.setUserEnabled(keycloakUserId, enabled);
+    }
+
 }
