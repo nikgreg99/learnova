@@ -14,6 +14,9 @@ keycloak:
   host: ${KEYCLOAK_HOST:localhost}
   port: ${KEYCLOAK_PORT:8081}
   realm: ${KEYCLOAK_REALM:learnova}
+  admin:
+    client-id: ${KEYCLOAK_ADMIN_CLIENT_ID:learnova-admin-client}
+    client-secret: ${KEYCLOAK_ADMIN_CLIENT_SECRET:}
   sync-test-users:
     enabled: ${KEYCLOAK_SYNC_TEST_USERS:false}
 
