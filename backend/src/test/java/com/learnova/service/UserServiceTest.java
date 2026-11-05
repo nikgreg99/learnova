@@ -1,11 +1,8 @@
+
 package com.learnova.service;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-
-import com.learnova.dto.user.UserProfileUpdateRequest;
 import com.learnova.dto.user.UserRequest;
+import com.learnova.dto.user.UserProfileUpdateRequest;
 import com.learnova.dto.user.UserResponse;
 import com.learnova.exception.UserDeletedException;
 import com.learnova.exception.UserNotFoundException;
@@ -16,19 +13,24 @@ import com.learnova.model.User;
 import com.learnova.model.UserStatus;
 import com.learnova.repository.RoleRepository;
 import com.learnova.repository.UserRepository;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -65,20 +67,19 @@ class UserServiceTest {
 
         studentRole = Role.builder().id(1L).name("STUDENT").description("Student").build();
 
-        instructorRole = Role.builder().id(2L).name("INSTRUCTOR").description("Instructor").build();
-
-        response = new UserResponse(1L, "Mario", "Rossi", "mario.rossi@example.com", "mrossi",
-                Set.of("STUDENT", "INSTRUCTOR"), UserStatus.ACTIVE, null, null);
+        response = new UserResponse(1L, "Mario", "Rossi", "mario.rossi@example.com", "mrossi", Set.of("STUDENT"),
+                UserStatus.ACTIVE, null, null);
     }
 
     // CREATE USER
     @Test
-    void createUser_shouldCreateUserWithMultipleRoles() {
+    void createUser_shouldAlwaysAssignStudentRole() {
         when(keycloakUserService.createUser(request)).thenReturn("keycloak-123");
 
         when(userMapper.toEntity(request)).thenReturn(user);
 
-        when(roleRepository.findAllByNameIn(request.roles())).thenReturn(List.of(studentRole, instructorRole));
+        // Now it always looks up Set.of("STUDENT")!
+        when(roleRepository.findAllByNameIn(Set.of("STUDENT"))).thenReturn(List.of(studentRole));
 
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
             User savedUser = invocation.getArgument(0);
@@ -88,32 +89,20 @@ class UserServiceTest {
 
         when(userMapper.toResponse(user)).thenReturn(response);
 
-    when(userRepository.save(any(User.class)))
-            .thenAnswer(invocation -> {
-                User savedUser = invocation.getArgument(0);
-                savedUser.setId(1L);
-                return savedUser;
-            });
+        UserResponse result = userService.createUser(request);
 
-    when(userMapper.toResponse(user))
-            .thenReturn(response);
-
-    UserResponse result = userService.createUser(request);
-
-    assertNotNull(result);
-    assertEquals(1L, result.id());
-    verify(roleRepository).findAllByNameIn(Set.of("STUDENT"));
+        assertNotNull(result);
+        assertEquals(1L, result.id());
+        verify(roleRepository).findAllByNameIn(Set.of("STUDENT"));
     }
 
     @Test
     void createUser_whenDatabaseSaveFails_shouldDeleteKeycloakUserAndRethrow() {
         when(keycloakUserService.createUser(request)).thenReturn("keycloak-123");
         when(userMapper.toEntity(request)).thenReturn(user);
-        when(roleRepository.findAllByNameIn(request.roles()))
-                .thenReturn(List.of(studentRole));
+        when(roleRepository.findAllByNameIn(request.roles())).thenReturn(List.of(studentRole));
         // Simulate database failure on save
-        when(userRepository.save(any(User.class)))
-                .thenThrow(new RuntimeException("Database connection lost"));
+        when(userRepository.save(any(User.class))).thenThrow(new RuntimeException("Database connection lost"));
 
         // 1. Assert that the exception is re-thrown to the caller
         assertThrows(RuntimeException.class, () -> userService.createUser(request));

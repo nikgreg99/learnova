@@ -5,16 +5,13 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
-@Service 
+@Service
 public class EmailService {
 
     private final JavaMailSender mailSender;
     private final String fromEmail;
 
-    public EmailService(
-            JavaMailSender mailSender,
-            @Value("${app.mail.from:noreply@learnova.local}") String fromEmail
-    ) {
+    public EmailService(JavaMailSender mailSender, @Value("${app.mail.from:noreply@learnova.local}") String fromEmail) {
         this.mailSender = mailSender;
         this.fromEmail = fromEmail;
     }
