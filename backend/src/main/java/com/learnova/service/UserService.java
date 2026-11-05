@@ -1,3 +1,4 @@
+
 package com.learnova.service;
 
 import com.learnova.dto.user.UserProfileUpdateRequest;
@@ -12,12 +13,13 @@ import com.learnova.model.User;
 import com.learnova.model.UserStatus;
 import com.learnova.repository.RoleRepository;
 import com.learnova.repository.UserRepository;
-import java.util.HashSet;
-import java.util.Set;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @Service
 @Transactional
@@ -57,15 +59,18 @@ public class UserService {
             User user = userMapper.toEntity(request);
             user.setKeycloakId(keycloakId);
 
-        // Assign roles from the database
-        Set<String> requestedRoles = request.roles() == null || request.roles().isEmpty()
-                ? Set.of("STUDENT")
-                : request.roles();
+            Set<Role> roles = new HashSet<>(roleRepository.findAllByNameIn(Set.of("STUDENT")));
 
-        Set<Role> roles = new HashSet<>(roleRepository.findAllByNameIn(requestedRoles));
+            user.setRoles(roles);
+            user.setStatus(UserStatus.ACTIVE);
 
-        if (roles.size() != requestedRoles.size()) {
-            throw new IllegalArgumentException("One or more requested roles do not exist");
+            // Persist the application profile
+            User savedUser = userRepository.save(user);
+            return userMapper.toResponse(savedUser);
+
+        } catch (Exception e) {
+            keycloakUserService.deleteUser(keycloakId);
+            throw e;
         }
     }
 
@@ -111,4 +116,5 @@ public class UserService {
         keycloakUserService.setEnabled(user.getKeycloakId(), false);
         user.setStatus(UserStatus.DELETED);
     }
+
 }

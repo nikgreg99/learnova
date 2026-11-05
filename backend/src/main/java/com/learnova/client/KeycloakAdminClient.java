@@ -1,24 +1,26 @@
+
 package com.learnova.client;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.learnova.config.keycloak.KeycloakAdminProperties;
-import com.learnova.dto.user.UserProfileUpdateRequest;
 import com.learnova.dto.user.UserRequest;
+import com.learnova.dto.user.UserProfileUpdateRequest;
 import com.learnova.exception.UserProfileConflictException;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 import org.jspecify.annotations.NonNull;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
+
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.List;
 
 @Component
 public class KeycloakAdminClient {
@@ -51,6 +53,13 @@ public class KeycloakAdminClient {
         restClient.put().uri(adminUserUri(keycloakUserId)).headers(headers -> headers.setBearerAuth(accessToken))
                 .contentType(MediaType.APPLICATION_JSON).body(new UserStatusRepresentation(enabled)).retrieve()
                 .toBodilessEntity();
+    }
+
+    public void deleteUser(String keycloakUserId) {
+        String accessToken = getAdminToken();
+
+        restClient.delete().uri(adminUserUri(keycloakUserId)).headers(headers -> headers.setBearerAuth(accessToken))
+                .retrieve().toBodilessEntity();
     }
 
     public void updateUserProfile(String keycloakUserId, UserProfileUpdateRequest request) {

@@ -1,3 +1,4 @@
+
 package com.learnova.config.security;
 
 import org.springframework.context.annotation.Bean;
@@ -18,11 +19,21 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) {
 
         return http.csrf(AbstractHttpConfigurer::disable)
+
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(
-                        auth -> auth.requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**")
-                                .permitAll().requestMatchers(HttpMethod.POST, "/api/users").permitAll()
-                                .requestMatchers("/api/**").authenticated().anyRequest().denyAll())
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults())).build();
+
+                .authorizeHttpRequests(auth -> auth
+
+                        .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
+
+                        .requestMatchers(HttpMethod.POST, "/api/v1/users").permitAll()
+
+                        .requestMatchers("/api/v1/**").authenticated()
+
+                        .anyRequest().denyAll())
+
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
+
+                .build();
     }
 }
