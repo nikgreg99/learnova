@@ -43,8 +43,7 @@ public class UserController {
     })
     @PostMapping
     public ResponseEntity<UserResponse> createUser(@Valid
-    @RequestBody
-    UserRequest request) {
+    @RequestBody UserRequest request) {
         UserResponse user = userService.createUser(request);
 
         URI location = URI.create("/api/users/" + user.id());
@@ -57,8 +56,7 @@ public class UserController {
     @ApiResponse(responseCode = "200", description = "Paginated user list. Use page (zero-based) and size query parameters.")
     @GetMapping
     public ResponseEntity<PagedModel<UserResponse>> getUsers(@ParameterObject
-    @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
-    Pageable pageable) {
+    @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         return ResponseEntity.ok(new PagedModel<>(userService.getUsers(pageable)));
     }
 
@@ -71,8 +69,7 @@ public class UserController {
     @GetMapping("/{id}")
     public ResponseEntity<UserResponse> getUser(
             @Parameter(description = "Unique ID of the user", example = "1", required = true)
-            @PathVariable
-            Long id) {
+            @PathVariable Long id) {
         return ResponseEntity.ok(userService.getUser(id));
     }
 
@@ -87,10 +84,9 @@ public class UserController {
     @PutMapping("/{id}")
     public ResponseEntity<UserResponse> updateUserProfile(
             @Parameter(description = "Unique ID of the user to update", example = "1", required = true)
-            @PathVariable
-            Long id, @Valid
-            @RequestBody
-            UserProfileUpdateRequest request) {
+            @PathVariable Long id,
+            @Valid
+            @RequestBody UserProfileUpdateRequest request) {
         return ResponseEntity.ok(userService.updateUserProfile(id, request));
     }
 
@@ -104,10 +100,9 @@ public class UserController {
     @PatchMapping("/{id}/status")
     public ResponseEntity<UserResponse> updateUserStatus(
             @Parameter(description = "Unique ID of the user to update", example = "1", required = true)
-            @PathVariable
-            Long id, @Valid
-            @RequestBody
-            UserStatusRequest request) {
+            @PathVariable Long id,
+            @Valid
+            @RequestBody UserStatusRequest request) {
         UserStatus status = switch (request.status()) {
             case ACTIVE -> UserStatus.ACTIVE;
             case DISABLED -> UserStatus.DISABLED;
@@ -124,8 +119,7 @@ public class UserController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(
             @Parameter(description = "Unique ID of the user to delete", example = "1", required = true)
-            @PathVariable
-            Long id) {
+            @PathVariable Long id) {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
     }

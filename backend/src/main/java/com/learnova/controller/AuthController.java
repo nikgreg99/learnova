@@ -35,8 +35,7 @@ public class AuthController {
     })
     @GetMapping("/me")
     public ResponseEntity<AuthUserResponse> getCurrentUser(@Parameter(hidden = true)
-    @AuthenticationPrincipal
-    Jwt jwt) {
+    @AuthenticationPrincipal Jwt jwt) {
         return ResponseEntity.ok(authService.getCurrentUser(jwt));
     }
 }

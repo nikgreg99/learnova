@@ -45,8 +45,7 @@ public class CourseController {
     @GetMapping("/{id}")
     public ResponseEntity<CourseResponse> getCourse(
             @Parameter(description = "Unique ID of the course", example = "1", required = true)
-            @PathVariable
-            Long id) {
+            @PathVariable Long id) {
         return courseService.getCourseById(id).map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
@@ -58,8 +57,7 @@ public class CourseController {
     })
     @PostMapping
     public ResponseEntity<CourseResponse> addCourse(@RequestBody
-    @Valid
-    CourseRequest course) {
+    @Valid CourseRequest course) {
         var createdCourse = courseService.addCourse(course);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdCourse);
     }
@@ -73,10 +71,9 @@ public class CourseController {
     @PutMapping("/{id}")
     public ResponseEntity<CourseResponse> updateCourse(
             @Parameter(description = "Unique ID of the course to update", example = "1", required = true)
-            @PathVariable
-            Long id, @RequestBody
-            @Valid
-            CourseRequest courseRequest) {
+            @PathVariable Long id,
+            @RequestBody
+            @Valid CourseRequest courseRequest) {
         var course = courseService.updateCourse(id, courseRequest);
         return course.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
@@ -89,8 +86,7 @@ public class CourseController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCourse(
             @Parameter(description = "Unique ID of the course to delete", example = "1", required = true)
-            @PathVariable
-            Long id) {
+            @PathVariable Long id) {
         courseService.deleteCourseById(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }

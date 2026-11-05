@@ -28,8 +28,7 @@ public interface UserMapper {
     @Mapping(target = "status", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    void updateUserProfile(UserProfileUpdateRequest request, @MappingTarget
-    User user);
+    void updateUserProfile(UserProfileUpdateRequest request, @MappingTarget User user);
 
     default String map(Role role) {
         return role.getName();

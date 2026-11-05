@@ -170,8 +170,7 @@ public class KeycloakAdminClient {
     }
 
     private record TokenResponse(
-            @JsonProperty("access_token")
-            String accessToken) {
+            @JsonProperty("access_token") String accessToken) {
     }
 
     private record UserRepresentation(
