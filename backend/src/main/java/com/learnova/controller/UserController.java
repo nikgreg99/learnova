@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Users", description = "User management operations")
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/api/v1/users")
 public class UserController {
 
     private final UserService userService;
@@ -46,7 +46,7 @@ public class UserController {
     @RequestBody UserRequest request) {
         UserResponse user = userService.createUser(request);
 
-        URI location = URI.create("/api/users/" + user.id());
+        URI location = URI.create("/api/v1/users/" + user.id());
 
         return ResponseEntity.created(location).body(user);
     }

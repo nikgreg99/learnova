@@ -52,9 +52,10 @@ public class UserService {
         String keycloakId = keycloakUserService.createUser(request);
 
         // Map the request DTO to the application entity
-        User user = userMapper.toEntity(request);
+        try {
 
-        user.setKeycloakId(keycloakId);
+            User user = userMapper.toEntity(request);
+            user.setKeycloakId(keycloakId);
 
         // Assign roles from the database
         Set<String> requestedRoles = request.roles() == null || request.roles().isEmpty()
@@ -66,14 +67,6 @@ public class UserService {
         if (roles.size() != requestedRoles.size()) {
             throw new IllegalArgumentException("One or more requested roles do not exist");
         }
-
-        user.setRoles(roles);
-        user.setStatus(UserStatus.ACTIVE);
-
-        // Persist the application profile
-        User savedUser = userRepository.save(user);
-
-        return userMapper.toResponse(savedUser);
     }
 
     public Page<UserResponse> getUsers(Pageable pageable) {

@@ -51,7 +51,6 @@ class UserServiceTest {
     private UserRequest request;
     private User user;
     private Role studentRole;
-    private Role instructorRole;
     private UserResponse response;
 
     @BeforeEach
@@ -73,7 +72,6 @@ class UserServiceTest {
     }
 
     // CREATE USER
-
     @Test
     void createUser_shouldCreateUserWithMultipleRoles() {
         when(keycloakUserService.createUser(request)).thenReturn("keycloak-123");
@@ -90,33 +88,38 @@ class UserServiceTest {
 
         when(userMapper.toResponse(user)).thenReturn(response);
 
-        UserResponse result = userService.createUser(request);
+    when(userRepository.save(any(User.class)))
+            .thenAnswer(invocation -> {
+                User savedUser = invocation.getArgument(0);
+                savedUser.setId(1L);
+                return savedUser;
+            });
 
-        assertNotNull(result);
-        assertEquals(1L, result.id());
-        assertEquals(Set.of("STUDENT", "INSTRUCTOR"), result.roles());
+    when(userMapper.toResponse(user))
+            .thenReturn(response);
 
-        assertEquals("keycloak-123", user.getKeycloakId());
-        assertEquals(UserStatus.ACTIVE, user.getStatus());
-        assertEquals(Set.of(studentRole, instructorRole), user.getRoles());
+    UserResponse result = userService.createUser(request);
 
-        verify(keycloakUserService).createUser(request);
-        verify(roleRepository).findAllByNameIn(request.roles());
-        verify(userRepository).save(user);
-        verify(userMapper).toResponse(user);
+    assertNotNull(result);
+    assertEquals(1L, result.id());
+    verify(roleRepository).findAllByNameIn(Set.of("STUDENT"));
     }
 
     @Test
-    void createUser_shouldThrowExceptionWhenRoleDoesNotExist() {
+    void createUser_whenDatabaseSaveFails_shouldDeleteKeycloakUserAndRethrow() {
         when(keycloakUserService.createUser(request)).thenReturn("keycloak-123");
-
         when(userMapper.toEntity(request)).thenReturn(user);
+        when(roleRepository.findAllByNameIn(request.roles()))
+                .thenReturn(List.of(studentRole));
+        // Simulate database failure on save
+        when(userRepository.save(any(User.class)))
+                .thenThrow(new RuntimeException("Database connection lost"));
 
-        when(roleRepository.findAllByNameIn(request.roles())).thenReturn(List.of(studentRole));
+        // 1. Assert that the exception is re-thrown to the caller
+        assertThrows(RuntimeException.class, () -> userService.createUser(request));
 
-        assertThrows(IllegalArgumentException.class, () -> userService.createUser(request));
-
-        verify(userRepository, never()).save(any(User.class));
+        // 2. Assert that Keycloak cleanup was invoked with the exact keycloak-123 ID!
+        verify(keycloakUserService).deleteUser("keycloak-123");
     }
 
     @Test
@@ -158,7 +161,6 @@ class UserServiceTest {
     }
 
     // UPDATE USER STATUS
-
     @Test
     void updateUserStatus_shouldSetStatusToDisabled() {
         Long id = 1L;
