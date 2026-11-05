@@ -11,24 +11,14 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class KeycloakTestUserSyncInitializer {
 
-    private static final Logger logger =
-            LoggerFactory.getLogger(KeycloakTestUserSyncInitializer.class);
+    private static final Logger logger = LoggerFactory.getLogger(KeycloakTestUserSyncInitializer.class);
 
     @Bean
-    @ConditionalOnProperty(
-            prefix = "keycloak.sync-test-users",
-            name = "enabled",
-            havingValue = "true"
-    )
-    CommandLineRunner syncKeycloakTestUsers(
-            KeycloakTestUserSyncService syncService
-    ) {
+    @ConditionalOnProperty(prefix = "keycloak.sync-test-users", name = "enabled", havingValue = "true")
+    CommandLineRunner syncKeycloakTestUsers(KeycloakTestUserSyncService syncService) {
         return args -> {
             int createdUsers = syncService.syncMissingTestUsers();
-            logger.info(
-                    "Imported {} missing Keycloak test user(s) into Learnova",
-                    createdUsers
-            );
+            logger.info("Imported {} missing Keycloak test user(s) into Learnova", createdUsers);
         };
     }
 }

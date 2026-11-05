@@ -10,5 +10,4 @@ public class UserDeletedException extends RuntimeException {
     public UserDeletedException(Long userId) {
         this.userId = userId;
     }
-
 }

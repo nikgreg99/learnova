@@ -1,26 +1,24 @@
-
 package com.learnova.client;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.learnova.config.keycloak.KeycloakAdminProperties;
-import com.learnova.dto.user.UserRequest;
 import com.learnova.dto.user.UserProfileUpdateRequest;
+import com.learnova.dto.user.UserRequest;
 import com.learnova.exception.UserProfileConflictException;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import org.jspecify.annotations.NonNull;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
-
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.List;
 
 @Component
 public class KeycloakAdminClient {
@@ -29,10 +27,7 @@ public class KeycloakAdminClient {
     private final RestClient restClient;
     private final KeycloakAdminProperties properties;
 
-    public KeycloakAdminClient(
-            RestClient.Builder restClientBuilder,
-            KeycloakAdminProperties properties
-    ) {
+    public KeycloakAdminClient(RestClient.Builder restClientBuilder, KeycloakAdminProperties properties) {
         this.restClient = restClientBuilder.build();
         this.properties = properties;
     }
@@ -41,26 +36,11 @@ public class KeycloakAdminClient {
 
         String accessToken = getAdminToken();
 
-        UserRepresentation user = new UserRepresentation(
-                request.username(),
-                request.email(),
-                request.firstName(),
-                request.lastName(),
-                true,
-                List.of(new CredentialRepresentation(
-                        "password",
-                        request.password(),
-                        false
-                ))
-        );
+        UserRepresentation user = new UserRepresentation(request.username(), request.email(), request.firstName(),
+                request.lastName(), true, List.of(new CredentialRepresentation("password", request.password(), false)));
 
-        var response = restClient.post()
-                .uri(adminUsersUri())
-                .headers(headers -> headers.setBearerAuth(accessToken))
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(user)
-                .retrieve()
-                .toBodilessEntity();
+        var response = restClient.post().uri(adminUsersUri()).headers(headers -> headers.setBearerAuth(accessToken))
+                .contentType(MediaType.APPLICATION_JSON).body(user).retrieve().toBodilessEntity();
 
         return getKeycloakId(response);
     }
@@ -68,34 +48,19 @@ public class KeycloakAdminClient {
     public void setUserEnabled(String keycloakUserId, boolean enabled) {
         String accessToken = getAdminToken();
 
-        restClient.put()
-                .uri(adminUserUri(keycloakUserId))
-                .headers(headers -> headers.setBearerAuth(accessToken))
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(new UserStatusRepresentation(enabled))
-                .retrieve()
+        restClient.put().uri(adminUserUri(keycloakUserId)).headers(headers -> headers.setBearerAuth(accessToken))
+                .contentType(MediaType.APPLICATION_JSON).body(new UserStatusRepresentation(enabled)).retrieve()
                 .toBodilessEntity();
     }
 
-    public void updateUserProfile(
-            String keycloakUserId,
-            UserProfileUpdateRequest request
-    ) {
+    public void updateUserProfile(String keycloakUserId, UserProfileUpdateRequest request) {
         String accessToken = getAdminToken();
 
         try {
-            restClient.put()
-                    .uri(adminUserUri(keycloakUserId))
-                    .headers(headers -> headers.setBearerAuth(accessToken))
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(new UserProfileRepresentation(
-                            request.username(),
-                            request.email(),
-                            request.firstName(),
-                            request.lastName()
-                    ))
-                    .retrieve()
-                    .toBodilessEntity();
+            restClient.put().uri(adminUserUri(keycloakUserId)).headers(headers -> headers.setBearerAuth(accessToken))
+                    .contentType(MediaType.APPLICATION_JSON).body(new UserProfileRepresentation(request.username(),
+                            request.email(), request.firstName(), request.lastName()))
+                    .retrieve().toBodilessEntity();
         } catch (HttpClientErrorException.Conflict ex) {
             throw new UserProfileConflictException("email or username");
         }
@@ -105,13 +70,12 @@ public class KeycloakAdminClient {
         String accessToken = getAdminToken();
         List<TestUser> testUsers = new ArrayList<>();
 
-        for (int first = 0; ; first += USER_PAGE_SIZE) {
+        for (int first = 0;; first += USER_PAGE_SIZE) {
             List<KeycloakUserRepresentation> users = restClient.get()
-                    .uri(adminUsersUri() + "?first=" + first
-                            + "&max=" + USER_PAGE_SIZE)
-                    .headers(headers -> headers.setBearerAuth(accessToken))
-                    .retrieve()
-                    .body(new ParameterizedTypeReference<>() {});
+                    .uri(adminUsersUri() + "?first=" + first + "&max=" + USER_PAGE_SIZE)
+                    .headers(headers -> headers.setBearerAuth(accessToken)).retrieve()
+                    .body(new ParameterizedTypeReference<>() {
+                    });
 
             if (users == null || users.isEmpty()) {
                 break;
@@ -119,15 +83,8 @@ public class KeycloakAdminClient {
 
             for (KeycloakUserRepresentation user : users) {
                 if (isTestUser(user)) {
-                    testUsers.add(new TestUser(
-                            user.id(),
-                            user.username(),
-                            user.email(),
-                            user.firstName(),
-                            user.lastName(),
-                            user.enabled(),
-                            getRealmRoles(user.id(), accessToken)
-                    ));
+                    testUsers.add(new TestUser(user.id(), user.username(), user.email(), user.firstName(),
+                            user.lastName(), user.enabled(), getRealmRoles(user.id(), accessToken)));
                 }
             }
 
@@ -140,21 +97,16 @@ public class KeycloakAdminClient {
     }
 
     private static boolean isTestUser(KeycloakUserRepresentation user) {
-        return user.id() != null
-                && user.username() != null
-                && user.email() != null
+        return user.id() != null && user.username() != null && user.email() != null
                 && user.username().startsWith("test-");
     }
 
-    private Set<String> getRealmRoles(
-            String keycloakUserId,
-            String accessToken
-    ) {
+    private Set<String> getRealmRoles(String keycloakUserId, String accessToken) {
         List<RealmRoleRepresentation> roles = restClient.get()
                 .uri(adminUserUri(keycloakUserId) + "/role-mappings/realm")
-                .headers(headers -> headers.setBearerAuth(accessToken))
-                .retrieve()
-                .body(new ParameterizedTypeReference<>() {});
+                .headers(headers -> headers.setBearerAuth(accessToken)).retrieve()
+                .body(new ParameterizedTypeReference<>() {
+                });
 
         if (roles == null) {
             return Set.of();
@@ -171,55 +123,42 @@ public class KeycloakAdminClient {
         URI location = response.getHeaders().getLocation();
 
         if (location == null) {
-            throw new IllegalStateException(
-                    "Keycloak did not return the created user location"
-            );
+            throw new IllegalStateException("Keycloak did not return the created user location");
         }
 
         String path = location.getPath();
         String keycloakId = path.substring(path.lastIndexOf('/') + 1);
 
         if (keycloakId.isBlank()) {
-            throw new IllegalStateException(
-                    "Unable to retrieve Keycloak user ID"
-            );
+            throw new IllegalStateException("Unable to retrieve Keycloak user ID");
         }
         return keycloakId;
     }
 
     private String getAdminToken() {
 
-        MultiValueMap<String, String> form =
-                new LinkedMultiValueMap<>();
+        MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
 
         form.add("grant_type", "client_credentials");
         form.add("client_id", properties.admin().clientId());
         form.add("client_secret", properties.admin().clientSecret());
 
-        TokenResponse response = restClient.post()
-                .uri(tokenUri())
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .body(form)
-                .retrieve()
-                .body(TokenResponse.class);
+        TokenResponse response = restClient.post().uri(tokenUri()).contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .body(form).retrieve().body(TokenResponse.class);
 
         if (response == null || response.accessToken() == null) {
-            throw new IllegalStateException(
-                    "Unable to obtain Keycloak admin token"
-            );
+            throw new IllegalStateException("Unable to obtain Keycloak admin token");
         }
 
         return response.accessToken();
     }
 
     private String tokenUri() {
-        return baseUrl() + "/realms/" + properties.realm()
-                + "/protocol/openid-connect/token";
+        return baseUrl() + "/realms/" + properties.realm() + "/protocol/openid-connect/token";
     }
 
     private String adminUsersUri() {
-        return baseUrl() + "/admin/realms/"
-                + properties.realm() + "/users";
+        return baseUrl() + "/admin/realms/" + properties.realm() + "/users";
     }
 
     private String adminUserUri(String keycloakUserId) {
@@ -232,8 +171,8 @@ public class KeycloakAdminClient {
 
     private record TokenResponse(
             @JsonProperty("access_token")
-            String accessToken
-    ) {}
+            String accessToken) {
+    }
 
     private record UserRepresentation(
             String username,
@@ -241,19 +180,19 @@ public class KeycloakAdminClient {
             String firstName,
             String lastName,
             boolean enabled,
-            List<CredentialRepresentation> credentials
-    ) {}
+            List<CredentialRepresentation> credentials) {
+    }
 
     private record UserStatusRepresentation(
-            boolean enabled
-    ) {}
+            boolean enabled) {
+    }
 
     private record UserProfileRepresentation(
             String username,
             String email,
             String firstName,
-            String lastName
-    ) {}
+            String lastName) {
+    }
 
     @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
     private record KeycloakUserRepresentation(
@@ -262,17 +201,19 @@ public class KeycloakAdminClient {
             String email,
             String firstName,
             String lastName,
-            boolean enabled
-    ) {}
+            boolean enabled) {
+    }
 
     @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-    private record RealmRoleRepresentation(String name) {}
+    private record RealmRoleRepresentation(
+            String name) {
+    }
 
     private record CredentialRepresentation(
             String type,
             String value,
-            boolean temporary
-    ) {}
+            boolean temporary) {
+    }
 
     public record TestUser(
             String keycloakId,
@@ -281,6 +222,6 @@ public class KeycloakAdminClient {
             String firstName,
             String lastName,
             boolean enabled,
-            Set<String> realmRoles
-    ) {}
+            Set<String> realmRoles) {
+    }
 }

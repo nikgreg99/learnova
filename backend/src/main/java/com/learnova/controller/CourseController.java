@@ -1,8 +1,8 @@
 package com.learnova.controller;
 
-import com.learnova.dto.error.ApiError;
 import com.learnova.dto.course.CourseRequest;
 import com.learnova.dto.course.CourseResponse;
+import com.learnova.dto.error.ApiError;
 import com.learnova.service.CourseService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -13,11 +13,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @Tag(name = "Courses", description = "Course management operations")
 @SecurityRequirement(name = "bearerAuth")
@@ -45,9 +44,10 @@ public class CourseController {
     })
     @GetMapping("/{id}")
     public ResponseEntity<CourseResponse> getCourse(
-            @Parameter(description = "Unique ID of the course", example = "1", required = true) @PathVariable Long id) {
-        return courseService.getCourseById(id)
-                .map(ResponseEntity::ok)
+            @Parameter(description = "Unique ID of the course", example = "1", required = true)
+            @PathVariable
+            Long id) {
+        return courseService.getCourseById(id).map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
@@ -57,7 +57,9 @@ public class CourseController {
             @ApiResponse(responseCode = "400", description = "Invalid request payload or validation failure", content = @Content(schema = @Schema(implementation = ApiError.class)))
     })
     @PostMapping
-    public ResponseEntity<CourseResponse> addCourse(@RequestBody @Valid CourseRequest course) {
+    public ResponseEntity<CourseResponse> addCourse(@RequestBody
+    @Valid
+    CourseRequest course) {
         var createdCourse = courseService.addCourse(course);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdCourse);
     }
@@ -70,12 +72,13 @@ public class CourseController {
     })
     @PutMapping("/{id}")
     public ResponseEntity<CourseResponse> updateCourse(
-            @Parameter(description = "Unique ID of the course to update", example = "1", required = true) @PathVariable Long id,
-            @RequestBody @Valid CourseRequest courseRequest) {
+            @Parameter(description = "Unique ID of the course to update", example = "1", required = true)
+            @PathVariable
+            Long id, @RequestBody
+            @Valid
+            CourseRequest courseRequest) {
         var course = courseService.updateCourse(id, courseRequest);
-        return course
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        return course.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @Operation(summary = "Delete a course by ID", description = "Deletes a course from the catalog by its unique identifier")
@@ -85,7 +88,9 @@ public class CourseController {
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCourse(
-            @Parameter(description = "Unique ID of the course to delete", example = "1", required = true) @PathVariable Long id) {
+            @Parameter(description = "Unique ID of the course to delete", example = "1", required = true)
+            @PathVariable
+            Long id) {
         courseService.deleteCourseById(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
