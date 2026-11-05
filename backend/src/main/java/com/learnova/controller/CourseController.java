@@ -21,7 +21,7 @@ import java.util.List;
 
 @Tag(name = "Courses", description = "Course management operations")
 @SecurityRequirement(name = "bearerAuth")
-@RequestMapping("/api/courses")
+@RequestMapping("/api/v1/courses")
 @RestController
 public class CourseController {
 

@@ -30,12 +30,8 @@ public class UserService {
     private final KeycloakUserService keycloakUserService;
     private final RoleRepository roleRepository;
 
-    public UserService(
-            UserRepository userRepository,
-            UserMapper userMapper,
-            KeycloakUserService keycloakUserService,
-            RoleRepository roleRepository
-    ) {
+    public UserService(UserRepository userRepository, UserMapper userMapper, KeycloakUserService keycloakUserService,
+            RoleRepository roleRepository) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.keycloakUserService = keycloakUserService;
@@ -43,8 +39,7 @@ public class UserService {
     }
 
     private User getUserOrThrow(Long id) {
-        return userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException(id));
+        return userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
     }
 
     private void ensureUserNotDeleted(User user) {
@@ -59,33 +54,24 @@ public class UserService {
         String keycloakId = keycloakUserService.createUser(request);
 
         // Map the request DTO to the application entity
-        User user = userMapper.toEntity(request);
+        try {
 
-        user.setKeycloakId(keycloakId);
+            User user = userMapper.toEntity(request);
+            user.setKeycloakId(keycloakId);
 
-        // Assign roles from the database
-        Set<String> requestedRoles = request.roles() == null
-                || request.roles().isEmpty()
-                ? Set.of("STUDENT")
-                : request.roles();
+            Set<Role> roles = new HashSet<>(roleRepository.findAllByNameIn(Set.of("STUDENT")));
 
-        Set<Role> roles = new HashSet<>(
-                roleRepository.findAllByNameIn(requestedRoles)
-        );
+            user.setRoles(roles);
+            user.setStatus(UserStatus.ACTIVE);
 
-        if (roles.size() != requestedRoles.size()) {
-            throw new IllegalArgumentException(
-                    "One or more requested roles do not exist"
-            );
+            // Persist the application profile
+            User savedUser = userRepository.save(user);
+            return userMapper.toResponse(savedUser);
+            
+        } catch (Exception e) {
+            keycloakUserService.deleteUser(keycloakId);
+            throw e;
         }
-
-        user.setRoles(roles);
-        user.setStatus(UserStatus.ACTIVE);
-
-        // Persist the application profile
-        User savedUser = userRepository.save(user);
-
-        return userMapper.toResponse(savedUser);
     }
 
     public Page<UserResponse> getUsers(Pageable pageable) {
@@ -97,26 +83,19 @@ public class UserService {
     }
 
     public UserResponse updateUserStatus(Long id, UserStatus status) {
-        if (status == null || status == UserStatus.DELETED
-                || status == UserStatus.PENDING_APPROVAL) {
+        if (status == null || status == UserStatus.DELETED || status == UserStatus.PENDING_APPROVAL) {
             throw new IllegalArgumentException("Invalid user status");
         }
 
         User user = getUserOrThrow(id);
         ensureUserNotDeleted(user);
-        keycloakUserService.setEnabled(
-                user.getKeycloakId(),
-                status == UserStatus.ACTIVE
-        );
+        keycloakUserService.setEnabled(user.getKeycloakId(), status == UserStatus.ACTIVE);
         user.setStatus(status);
 
         return userMapper.toResponse(user);
     }
 
-    public UserResponse updateUserProfile(
-            Long id,
-            UserProfileUpdateRequest request
-    ) {
+    public UserResponse updateUserProfile(Long id, UserProfileUpdateRequest request) {
         User user = getUserOrThrow(id);
         ensureUserNotDeleted(user);
         if (userRepository.existsByEmailAndIdNot(request.email(), id)) {
@@ -132,8 +111,7 @@ public class UserService {
 
     @Transactional
     public void deleteUser(Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException(id));
+        User user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
         ensureUserNotDeleted(user);
         keycloakUserService.setEnabled(user.getKeycloakId(), false);
         user.setStatus(UserStatus.DELETED);

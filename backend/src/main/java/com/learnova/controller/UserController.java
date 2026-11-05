@@ -32,7 +32,7 @@ import java.net.URI;
         description = "User management operations"
 )
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/api/v1/users")
 public class UserController {
 
     private final UserService userService;
@@ -67,7 +67,7 @@ public class UserController {
     ) {
         UserResponse user = userService.createUser(request);
 
-        URI location = URI.create("/api/users/" + user.id());
+        URI location = URI.create("/api/v1/users/" + user.id());
 
         return ResponseEntity
                 .created(location)

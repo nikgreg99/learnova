@@ -74,7 +74,7 @@ class AuthControllerTest {
         when(authService.getCurrentUser(any(Jwt.class)))
                 .thenReturn(authUserResponse);
 
-        mockMvc.perform(get("/api/auth/me")
+        mockMvc.perform(get("/api/v1/auth/me")
                         .with(jwt().jwt(createJwt())))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(
@@ -91,7 +91,7 @@ class AuthControllerTest {
     void getCurrentUser_shouldReturnUnauthorizedWhenUnauthenticated()
             throws Exception {
 
-        mockMvc.perform(get("/api/auth/me"))
+        mockMvc.perform(get("/api/v1/auth/me"))
                 .andExpect(status().isUnauthorized());
     }
 }

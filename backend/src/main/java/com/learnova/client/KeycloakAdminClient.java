@@ -77,6 +77,16 @@ public class KeycloakAdminClient {
                 .toBodilessEntity();
     }
 
+    public void deleteUser(String keycloakUserId) {
+        String accessToken = getAdminToken();
+
+        restClient.delete()
+                .uri(adminUserUri(keycloakUserId))
+                .headers(headers -> headers.setBearerAuth(accessToken))
+                .retrieve()
+                .toBodilessEntity();
+    } 
+
     public void updateUserProfile(
             String keycloakUserId,
             UserProfileUpdateRequest request

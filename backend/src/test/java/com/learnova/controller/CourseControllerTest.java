@@ -74,7 +74,7 @@ class CourseControllerTest {
     void getCourses_shouldReturnUnauthorizedWhenUserIsNotAuthenticated()
             throws Exception {
 
-        mockMvc.perform(get("/api/courses"))
+        mockMvc.perform(get("/api/v1/courses"))
                 .andExpect(status().isUnauthorized());
 
         verifyNoInteractions(courseService);
@@ -85,7 +85,7 @@ class CourseControllerTest {
         when(courseService.getCourses())
                 .thenReturn(List.of(courseResponse));
 
-        mockMvc.perform(get("/api/courses")
+        mockMvc.perform(get("/api/v1/courses")
                         .with(jwt()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
@@ -98,7 +98,7 @@ class CourseControllerTest {
         when(courseService.getCourses())
                 .thenReturn(List.of());
 
-        mockMvc.perform(get("/api/courses")
+        mockMvc.perform(get("/api/v1/courses")
                         .with(jwt()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
@@ -110,7 +110,7 @@ class CourseControllerTest {
         when(courseService.getCourseById(courseResponse.id()))
                 .thenReturn(Optional.of(courseResponse));
 
-        mockMvc.perform(get("/api/courses/{id}", courseResponse.id())
+        mockMvc.perform(get("/api/v1/courses/{id}", courseResponse.id())
                         .with(jwt()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(courseResponse.id()))
@@ -124,7 +124,7 @@ class CourseControllerTest {
         when(courseService.getCourseById(nonExistingId))
                 .thenReturn(Optional.empty());
 
-        mockMvc.perform(get("/api/courses/{id}", nonExistingId)
+        mockMvc.perform(get("/api/v1/courses/{id}", nonExistingId)
                         .with(jwt()))
                 .andExpect(status().isNotFound());
     }
@@ -134,7 +134,7 @@ class CourseControllerTest {
         when(courseService.addCourse(courseRequest))
                 .thenReturn(courseResponse);
 
-        mockMvc.perform(post("/api/courses")
+        mockMvc.perform(post("/api/v1/courses")
                         .with(jwt())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(courseRequest)))
@@ -151,7 +151,7 @@ class CourseControllerTest {
                 new BigDecimal("49.90")
         );
 
-        mockMvc.perform(post("/api/courses")
+        mockMvc.perform(post("/api/v1/courses")
                         .with(jwt())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
@@ -165,7 +165,7 @@ class CourseControllerTest {
         when(courseService.updateCourse(courseResponse.id(), courseRequest))
                 .thenReturn(Optional.of(courseResponse));
 
-        mockMvc.perform(put("/api/courses/{id}", courseResponse.id())
+        mockMvc.perform(put("/api/v1/courses/{id}", courseResponse.id())
                         .with(jwt())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(courseRequest)))
@@ -181,7 +181,7 @@ class CourseControllerTest {
         when(courseService.updateCourse(courseResponse.id(), courseRequest))
                 .thenReturn(Optional.empty());
 
-        mockMvc.perform(put("/api/courses/{id}", courseResponse.id())
+        mockMvc.perform(put("/api/v1/courses/{id}", courseResponse.id())
                         .with(jwt())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(courseRequest)))
@@ -190,7 +190,7 @@ class CourseControllerTest {
 
     @Test
     void deleteCourse_shouldDeleteCourseWhenCourseExists() throws Exception {
-        mockMvc.perform(delete("/api/courses/{id}", courseResponse.id())
+        mockMvc.perform(delete("/api/v1/courses/{id}", courseResponse.id())
                         .with(jwt()))
                 .andExpect(status().isNoContent());
 

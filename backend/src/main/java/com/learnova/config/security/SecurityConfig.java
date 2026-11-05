@@ -34,10 +34,10 @@ public class SecurityConfig {
                                 "/v3/api-docs/**"
                         ).permitAll()
 
-                        .requestMatchers(HttpMethod.POST, "/api/users")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/users")
                         .permitAll()
 
-                        .requestMatchers("/api/**").authenticated()
+                        .requestMatchers("/api/v1/**").authenticated()
 
                         .anyRequest().denyAll()
                 )

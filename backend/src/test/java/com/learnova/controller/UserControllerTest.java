@@ -78,13 +78,13 @@ class UserControllerTest {
         when(userService.createUser(any(UserRequest.class)))
                 .thenReturn(response);
 
-        mockMvc.perform(post("/api/users")
+        mockMvc.perform(post("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(header().string(
                         "Location",
-                        "/api/users/1"
+                        "/api/v1/users/1"
                 ))
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.firstName").value("Mario"))
@@ -100,7 +100,7 @@ class UserControllerTest {
         when(userService.getUsers(any()))
                 .thenReturn(new PageImpl<>(java.util.List.of(response), PageRequest.of(0, 20), 1));
 
-        mockMvc.perform(get("/api/users")
+        mockMvc.perform(get("/api/v1/users")
                         .param("page", "0")
                         .param("size", "20")
                         .with(jwt()))
@@ -116,7 +116,7 @@ class UserControllerTest {
     void getUser_shouldReturnUserById() throws Exception {
         when(userService.getUser(1L)).thenReturn(createUserResponse(UserStatus.DISABLED));
 
-        mockMvc.perform(get("/api/users/1").with(jwt()))
+        mockMvc.perform(get("/api/v1/users/1").with(jwt()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.status").value("DISABLED"));
@@ -133,7 +133,7 @@ class UserControllerTest {
                 any(java.util.Locale.class)
         )).thenReturn("User with id 99 was not found.");
 
-        mockMvc.perform(get("/api/users/99").with(jwt()))
+        mockMvc.perform(get("/api/v1/users/99").with(jwt()))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("User with id 99 was not found."));
     }
@@ -161,7 +161,7 @@ class UserControllerTest {
         when(userService.updateUserProfile(eq(1L), any(UserProfileUpdateRequest.class)))
                 .thenReturn(response);
 
-        mockMvc.perform(put("/api/users/1")
+        mockMvc.perform(put("/api/v1/users/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonMapper.writeValueAsString(request))
                         .with(jwt()))
@@ -190,7 +190,7 @@ class UserControllerTest {
                 any(java.util.Locale.class)
         )).thenReturn("The email is already in use.");
 
-        mockMvc.perform(put("/api/users/1")
+        mockMvc.perform(put("/api/v1/users/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonMapper.writeValueAsString(request))
                         .with(jwt()))
@@ -208,7 +208,7 @@ class UserControllerTest {
         when(userService.updateUserStatus(1L, UserStatus.DISABLED))
                 .thenReturn(response);
 
-        mockMvc.perform(patch("/api/users/1/status")
+        mockMvc.perform(patch("/api/v1/users/1/status")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"status\":\"DISABLED\"}")
                         .with(jwt()))
@@ -230,7 +230,7 @@ class UserControllerTest {
                 any(java.util.Locale.class)
         )).thenReturn("User with id 99 was not found.");
 
-        mockMvc.perform(patch("/api/users/99/status")
+        mockMvc.perform(patch("/api/v1/users/99/status")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"status\":\"DISABLED\"}")
                         .with(jwt()))
@@ -249,7 +249,7 @@ class UserControllerTest {
         when(userService.updateUserStatus(1L, UserStatus.ACTIVE))
                 .thenReturn(response);
 
-        mockMvc.perform(patch("/api/users/1/status")
+        mockMvc.perform(patch("/api/v1/users/1/status")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"status\":\"ACTIVE\"}")
                         .with(jwt()))
@@ -271,7 +271,7 @@ class UserControllerTest {
                 any(java.util.Locale.class)
         )).thenReturn("User with id 1 has been deleted.");
 
-        mockMvc.perform(patch("/api/users/1/status")
+        mockMvc.perform(patch("/api/v1/users/1/status")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"status\":\"ACTIVE\"}")
                         .with(jwt()))
@@ -285,7 +285,7 @@ class UserControllerTest {
 
     @Test
     void updateUserStatus_shouldRejectUnsupportedStatus() throws Exception {
-        mockMvc.perform(patch("/api/users/1/status")
+        mockMvc.perform(patch("/api/v1/users/1/status")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"status\":\"DELETED\"}")
                         .with(jwt()))
@@ -300,7 +300,7 @@ class UserControllerTest {
     void deleteUser_shouldReturn204NoContent() throws Exception {
         doNothing().when(userService).deleteUser(1L);
 
-        mockMvc.perform(delete("/api/users/1")
+        mockMvc.perform(delete("/api/v1/users/1")
                         .with(jwt()))
                 .andExpect(status().isNoContent())
                 .andExpect(content().string(""));
@@ -319,7 +319,7 @@ class UserControllerTest {
                 any(java.util.Locale.class)
         )).thenReturn("User with id 99 was not found.");
 
-        mockMvc.perform(delete("/api/users/99")
+        mockMvc.perform(delete("/api/v1/users/99")
                         .with(jwt()))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404))
