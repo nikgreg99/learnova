@@ -61,6 +61,16 @@ services:
       retries: 15
       start_period: 30s
 
+  mailpit:
+    image: ${MAILPIT_IMAGE:-axllent/mailpit:latest}
+    container_name: learnova-mailpit
+    restart: unless-stopped
+    ports:
+      - "${MAILPIT_SMTP_BIND_ADDRESS:-127.0.0.1}:${MAILPIT_SMTP_PORT:-1025}:1025"
+      - "${MAILPIT_UI_BIND_ADDRESS:-127.0.0.1}:${MAILPIT_UI_PORT:-8025}:8025"
+    environment:
+      MP_MAX_MESSAGES: 500
+
   learnova-backend:
     build:
       context: ./backend
@@ -83,6 +93,8 @@ services:
       KEYCLOAK_SYNC_TEST_USERS: ${KEYCLOAK_SYNC_TEST_USERS:-true}
       KEYCLOAK_ISSUER_URI: ${KEYCLOAK_SCHEME:-http}://${KEYCLOAK_HOST:-localhost}:${KEYCLOAK_PORT:-8081}/realms/${KEYCLOAK_REALM:-learnova}
       KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/${KEYCLOAK_REALM:-learnova}/protocol/openid-connect/certs
+      MAIL_HOST: mailpit
+      MAIL_PORT: 1025
 
     ports:
       - "${APP_BIND_ADDRESS:-127.0.0.1}:${APP_PORT:-8080}:8080"
@@ -92,6 +104,8 @@ services:
         condition: service_healthy
       keycloak:
         condition: service_healthy
+      mailpit:
+        condition: service_started
 
 volumes:
   postgres_data:

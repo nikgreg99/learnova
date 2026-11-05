@@ -4,6 +4,15 @@
   "enabled": true,
   "registrationAllowed": false,
   "loginWithEmailAllowed": false,
+  "smtpServer": {
+    "host": "mailpit",
+    "port": "1025",
+    "from": "noreply@learnova.local",
+    "fromDisplayName": "Learnova",
+    "ssl": "false",
+    "starttls": "false",
+    "auth": "false"
+  },
 
   "roles": {
     "realm": [

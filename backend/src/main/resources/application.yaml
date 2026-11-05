@@ -9,17 +9,6 @@ spring:
           issuer-uri: ${KEYCLOAK_ISSUER_URI:${KEYCLOAK_SCHEME:http}://${KEYCLOAK_HOST:localhost}:${KEYCLOAK_PORT:8081}/realms/${KEYCLOAK_REALM:learnova}}
           jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:${KEYCLOAK_SCHEME:http}://${KEYCLOAK_HOST:localhost}:${KEYCLOAK_PORT:8081}/realms/${KEYCLOAK_REALM:learnova}/protocol/openid-connect/certs}
 
-keycloak:
-  scheme: ${KEYCLOAK_SCHEME:http}
-  host: ${KEYCLOAK_HOST:localhost}
-  port: ${KEYCLOAK_PORT:8081}
-  realm: ${KEYCLOAK_REALM:learnova}
-  admin:
-    client-id: ${KEYCLOAK_ADMIN_CLIENT_ID:learnova-admin-client}
-    client-secret: ${KEYCLOAK_ADMIN_CLIENT_SECRET:}
-  sync-test-users:
-    enabled: ${KEYCLOAK_SYNC_TEST_USERS:false}
-
   jpa:
     database: POSTGRESQL
     hibernate:
@@ -36,10 +25,31 @@ keycloak:
     baseline-on-migrate: false
     validate-on-migrate: true
 
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+
+keycloak:
+  scheme: ${KEYCLOAK_SCHEME:http}
+  host: ${KEYCLOAK_HOST:localhost}
+  port: ${KEYCLOAK_PORT:8081}
+  realm: ${KEYCLOAK_REALM:learnova}
+  admin:
+    client-id: ${KEYCLOAK_ADMIN_CLIENT_ID:learnova-admin-client}
+    client-secret: ${KEYCLOAK_ADMIN_CLIENT_SECRET:}
+  sync-test-users:
+    enabled: ${KEYCLOAK_SYNC_TEST_USERS:false}
+
 springdoc:
   api-docs:
-      path: /v3/api-docs
+    path: /v3/api-docs
   swagger-ui:
-      path: /swagger-ui.html
-      operations-sorter: method
-      tags-sorter: alpha
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha

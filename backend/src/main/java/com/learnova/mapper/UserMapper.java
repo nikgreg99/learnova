@@ -1,8 +1,8 @@
 package com.learnova.mapper;
 
-import com.learnova.dto.user.UserResponse;
-import com.learnova.dto.user.UserRequest;
 import com.learnova.dto.user.UserProfileUpdateRequest;
+import com.learnova.dto.user.UserRequest;
+import com.learnova.dto.user.UserResponse;
 import com.learnova.model.Role;
 import com.learnova.model.User;
 import org.mapstruct.Mapper;
@@ -28,10 +28,7 @@ public interface UserMapper {
     @Mapping(target = "status", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    void updateUserProfile(
-            UserProfileUpdateRequest request,
-            @MappingTarget User user
-    );
+    void updateUserProfile(UserProfileUpdateRequest request, @MappingTarget User user);
 
     default String map(Role role) {
         return role.getName();

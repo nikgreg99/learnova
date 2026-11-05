@@ -1,6 +1,5 @@
 package com.learnova.exception;
 
-
 import lombok.Getter;
 
 @Getter

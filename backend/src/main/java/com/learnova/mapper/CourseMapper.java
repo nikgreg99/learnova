@@ -14,9 +14,5 @@ public interface CourseMapper {
 
     CourseResponse toResponse(Course courseResponse);
 
-    void updateCourse(
-            CourseRequest request,
-            @MappingTarget Course course
-    );
-
+    void updateCourse(CourseRequest request, @MappingTarget Course course);
 }

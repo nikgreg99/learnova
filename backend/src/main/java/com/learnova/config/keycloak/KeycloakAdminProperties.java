@@ -8,14 +8,13 @@ public record KeycloakAdminProperties(
         String host,
         int port,
         String realm,
-        Admin admin
-) {
+        Admin admin) {
     public String baseUrl() {
         return scheme + "://" + host + ":" + port;
     }
 
     public record Admin(
             String clientId,
-            String clientSecret
-    ) {}
+            String clientSecret) {
+    }
 }

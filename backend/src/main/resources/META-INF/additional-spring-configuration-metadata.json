@@ -1,0 +1,16 @@
+{
+  "properties": [
+    {
+      "name": "keycloak.sync-test-users.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether to synchronize Keycloak test users into PostgreSQL on startup."
+    },
+    {
+      "name": "app.mail.from",
+      "type": "java.lang.String",
+      "description": "Default from address for outgoing application emails."
+    }
+  ]
+}
+
+

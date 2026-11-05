@@ -1,28 +1,18 @@
 package com.learnova.model;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
-
 @Entity
-@Table(
-        name = "app_user",
-        uniqueConstraints = {
-                @UniqueConstraint(
-                        name = "uk_app_user_keycloak_id",
-                        columnNames = "keycloak_id"
-                ),
-                @UniqueConstraint(
-                        name = "uk_app_user_email",
-                        columnNames = "email"
-                )
-        }
-)
+@Table(name = "app_user", uniqueConstraints = {
+        @UniqueConstraint(name = "uk_app_user_keycloak_id", columnNames = "keycloak_id"),
+        @UniqueConstraint(name = "uk_app_user_email", columnNames = "email")
+})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -50,11 +40,7 @@ public class User {
     private String username;
 
     @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "user_role",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id")
-    )
+    @JoinTable(name = "user_role", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
     @Builder.Default
     private Set<Role> roles = new HashSet<>();
 
