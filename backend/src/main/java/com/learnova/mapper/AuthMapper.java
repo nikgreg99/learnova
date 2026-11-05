@@ -1,7 +1,6 @@
 package com.learnova.mapper;
 
 import com.learnova.dto.auth.AuthUserResponse;
-
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.springframework.security.oauth2.jwt.Jwt;

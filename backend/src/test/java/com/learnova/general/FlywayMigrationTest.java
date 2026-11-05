@@ -1,9 +1,10 @@
 package com.learnova.general;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.MigrationInfo;
 import org.junit.jupiter.api.Test;
-import static org.assertj.core.api.Assertions.assertThat;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
@@ -30,5 +31,4 @@ public class FlywayMigrationTest {
         assertThat(current).isNotNull();
         assertThat(current.getState().isApplied()).isTrue();
     }
-
 }

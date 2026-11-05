@@ -9,5 +9,4 @@ public class CourseNotFoundException extends RuntimeException {
     public CourseNotFoundException(Long courseId) {
         this.courseId = courseId;
     }
-
 }

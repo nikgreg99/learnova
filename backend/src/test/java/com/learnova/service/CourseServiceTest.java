@@ -1,24 +1,23 @@
 package com.learnova.service;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 import com.learnova.dto.course.CourseRequest;
 import com.learnova.dto.course.CourseResponse;
 import com.learnova.exception.CourseNotFoundException;
 import com.learnova.mapper.CourseMapper;
 import com.learnova.model.Course;
 import com.learnova.repository.CourseRepository;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class CourseServiceTest {
@@ -41,24 +40,12 @@ class CourseServiceTest {
     void setUp() {
         courseId = 1L;
 
-        course = createCourse(
-                courseId,
-                "Java Fundamentals",
-                "Introduction to Java",
-                "49.90");
+        course = createCourse(courseId, "Java Fundamentals", "Introduction to Java", "49.90");
 
-        courseRequest = new CourseRequest(
-                "Advanced Java",
-                "Advanced Java concepts",
-                new BigDecimal("59.90"));
+        courseRequest = new CourseRequest("Advanced Java", "Advanced Java concepts", new BigDecimal("59.90"));
 
-        courseResponse = new CourseResponse(
-                courseId,
-                courseRequest.name(),
-                courseRequest.description(),
-                courseRequest.price(),
-                null,
-                null);
+        courseResponse = new CourseResponse(courseId, courseRequest.name(), courseRequest.description(),
+                courseRequest.price(), null, null);
     }
 
     private Course createCourse(Long id, String name, String description, String price) {
@@ -72,19 +59,10 @@ class CourseServiceTest {
 
     @Test
     void shouldReturnCourse() {
-        Course secondCourse = createCourse(
-                2L,
-                "Spring Boot Essentials",
-                "Learn Spring Boot",
-                "79.90");
+        Course secondCourse = createCourse(2L, "Spring Boot Essentials", "Learn Spring Boot", "79.90");
 
-        CourseResponse secondResponse = new CourseResponse(
-                2L,
-                "Spring Boot Essentials",
-                "Learn Spring Boot",
-                new BigDecimal("79.90"),
-                null,
-                null);
+        CourseResponse secondResponse = new CourseResponse(2L, "Spring Boot Essentials", "Learn Spring Boot",
+                new BigDecimal("79.90"), null, null);
 
         when(courseRepository.findAll()).thenReturn(List.of(course, secondCourse));
         when(courseMapper.toResponse(course)).thenReturn(courseResponse);

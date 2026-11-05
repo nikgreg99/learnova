@@ -2,12 +2,10 @@ package com.learnova.config;
 
 import com.learnova.model.Course;
 import com.learnova.repository.CourseRepository;
-
+import java.math.BigDecimal;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.math.BigDecimal;
 
 @Configuration
 public class LearnovaDataInitializer {

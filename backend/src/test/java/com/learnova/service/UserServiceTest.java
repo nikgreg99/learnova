@@ -1,8 +1,11 @@
-
 package com.learnova.service;
 
-import com.learnova.dto.user.UserRequest;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
 import com.learnova.dto.user.UserProfileUpdateRequest;
+import com.learnova.dto.user.UserRequest;
 import com.learnova.dto.user.UserResponse;
 import com.learnova.exception.UserDeletedException;
 import com.learnova.exception.UserNotFoundException;
@@ -13,24 +16,19 @@ import com.learnova.model.User;
 import com.learnova.model.UserStatus;
 import com.learnova.repository.RoleRepository;
 import com.learnova.repository.UserRepository;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -58,67 +56,39 @@ class UserServiceTest {
 
     @BeforeEach
     void setUp() {
-        request = new UserRequest(
-                "Mario",
-                "Rossi",
-                "mario.rossi@example.com",
-                "mrossi",
-                Set.of("STUDENT", "INSTRUCTOR"),
-                "SecurePassword123!"
-        );
+        request = new UserRequest("Mario", "Rossi", "mario.rossi@example.com", "mrossi",
+                Set.of("STUDENT", "INSTRUCTOR"), "SecurePassword123!");
 
         user = new User();
         user.setFirstName("Mario");
         user.setLastName("Rossi");
         user.setEmail("mario.rossi@example.com");
 
-        studentRole = Role.builder()
-                .id(1L)
-                .name("STUDENT")
-                .description("Student")
-                .build();
+        studentRole = Role.builder().id(1L).name("STUDENT").description("Student").build();
 
-        instructorRole = Role.builder()
-                .id(2L)
-                .name("INSTRUCTOR")
-                .description("Instructor")
-                .build();
+        instructorRole = Role.builder().id(2L).name("INSTRUCTOR").description("Instructor").build();
 
-        response = new UserResponse(
-                1L,
-                "Mario",
-                "Rossi",
-                "mario.rossi@example.com",
-                "mrossi",
-                Set.of("STUDENT", "INSTRUCTOR"),
-                UserStatus.ACTIVE,
-                null,
-                null
-        );
+        response = new UserResponse(1L, "Mario", "Rossi", "mario.rossi@example.com", "mrossi",
+                Set.of("STUDENT", "INSTRUCTOR"), UserStatus.ACTIVE, null, null);
     }
 
     // CREATE USER
 
     @Test
     void createUser_shouldCreateUserWithMultipleRoles() {
-        when(keycloakUserService.createUser(request))
-                .thenReturn("keycloak-123");
+        when(keycloakUserService.createUser(request)).thenReturn("keycloak-123");
 
-        when(userMapper.toEntity(request))
-                .thenReturn(user);
+        when(userMapper.toEntity(request)).thenReturn(user);
 
-        when(roleRepository.findAllByNameIn(request.roles()))
-                .thenReturn(List.of(studentRole, instructorRole));
+        when(roleRepository.findAllByNameIn(request.roles())).thenReturn(List.of(studentRole, instructorRole));
 
-        when(userRepository.save(any(User.class)))
-                .thenAnswer(invocation -> {
-                    User savedUser = invocation.getArgument(0);
-                    savedUser.setId(1L);
-                    return savedUser;
-                });
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
+            User savedUser = invocation.getArgument(0);
+            savedUser.setId(1L);
+            return savedUser;
+        });
 
-        when(userMapper.toResponse(user))
-                .thenReturn(response);
+        when(userMapper.toResponse(user)).thenReturn(response);
 
         UserResponse result = userService.createUser(request);
 
@@ -138,19 +108,13 @@ class UserServiceTest {
 
     @Test
     void createUser_shouldThrowExceptionWhenRoleDoesNotExist() {
-        when(keycloakUserService.createUser(request))
-                .thenReturn("keycloak-123");
+        when(keycloakUserService.createUser(request)).thenReturn("keycloak-123");
 
-        when(userMapper.toEntity(request))
-                .thenReturn(user);
+        when(userMapper.toEntity(request)).thenReturn(user);
 
-        when(roleRepository.findAllByNameIn(request.roles()))
-                .thenReturn(List.of(studentRole));
+        when(roleRepository.findAllByNameIn(request.roles())).thenReturn(List.of(studentRole));
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> userService.createUser(request)
-        );
+        assertThrows(IllegalArgumentException.class, () -> userService.createUser(request));
 
         verify(userRepository, never()).save(any(User.class));
     }
@@ -200,11 +164,9 @@ class UserServiceTest {
         Long id = 1L;
         User user = createUser(id, UserStatus.ACTIVE);
 
-        when(userRepository.findById(id))
-                .thenReturn(Optional.of(user));
+        when(userRepository.findById(id)).thenReturn(Optional.of(user));
 
-        when(userMapper.toResponse(user))
-                .thenReturn(response);
+        when(userMapper.toResponse(user)).thenReturn(response);
 
         UserResponse result = userService.updateUserStatus(id, UserStatus.DISABLED);
 
@@ -220,13 +182,9 @@ class UserServiceTest {
     void updateUserStatus_shouldThrowWhenUserNotFoundForDisabledStatus() {
         Long id = 99L;
 
-        when(userRepository.findById(id))
-                .thenReturn(Optional.empty());
+        when(userRepository.findById(id)).thenReturn(Optional.empty());
 
-        assertThrows(
-                UserNotFoundException.class,
-                () -> userService.updateUserStatus(id, UserStatus.DISABLED)
-        );
+        assertThrows(UserNotFoundException.class, () -> userService.updateUserStatus(id, UserStatus.DISABLED));
 
         verifyNoInteractions(keycloakUserService);
         verify(userMapper, never()).toResponse(any());
@@ -234,10 +192,7 @@ class UserServiceTest {
 
     @Test
     void updateUserStatus_shouldRejectUnsupportedStatus() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> userService.updateUserStatus(1L, UserStatus.DELETED)
-        );
+        assertThrows(IllegalArgumentException.class, () -> userService.updateUserStatus(1L, UserStatus.DELETED));
 
         verifyNoInteractions(userRepository, keycloakUserService, userMapper);
     }
@@ -246,12 +201,8 @@ class UserServiceTest {
     void updateUserProfile_shouldUpdateKeycloakAndLocalProfile() {
         Long id = 1L;
         User user = createUser(id, UserStatus.ACTIVE);
-        UserProfileUpdateRequest update = new UserProfileUpdateRequest(
-                "Updated",
-                "User",
-                "updated@example.com",
-                "updated"
-        );
+        UserProfileUpdateRequest update = new UserProfileUpdateRequest("Updated", "User", "updated@example.com",
+                "updated");
 
         when(userRepository.findById(id)).thenReturn(Optional.of(user));
         when(userMapper.toResponse(user)).thenReturn(response);
@@ -268,21 +219,14 @@ class UserServiceTest {
     void updateUserProfile_shouldRejectEmailOrUsernameAlreadyInUse() {
         Long id = 1L;
         User user = createUser(id, UserStatus.ACTIVE);
-        UserProfileUpdateRequest update = new UserProfileUpdateRequest(
-                "Updated",
-                "User",
-                "taken@example.com",
-                "updated"
-        );
+        UserProfileUpdateRequest update = new UserProfileUpdateRequest("Updated", "User", "taken@example.com",
+                "updated");
 
         when(userRepository.findById(id)).thenReturn(Optional.of(user));
-        when(userRepository.existsByEmailAndIdNot(update.email(), id))
-                .thenReturn(true);
+        when(userRepository.existsByEmailAndIdNot(update.email(), id)).thenReturn(true);
 
-        UserProfileConflictException exception = assertThrows(
-                UserProfileConflictException.class,
-                () -> userService.updateUserProfile(id, update)
-        );
+        UserProfileConflictException exception = assertThrows(UserProfileConflictException.class,
+                () -> userService.updateUserProfile(id, update));
 
         assertEquals("email", exception.getConflictingField());
         verifyNoInteractions(keycloakUserService);
@@ -294,22 +238,14 @@ class UserServiceTest {
         Long id = 1L;
         User user = createUser(id, UserStatus.ACTIVE);
         user.setFirstName("Original");
-        UserProfileUpdateRequest update = new UserProfileUpdateRequest(
-                "Updated",
-                "User",
-                "updated@example.com",
-                "updated"
-        );
+        UserProfileUpdateRequest update = new UserProfileUpdateRequest("Updated", "User", "updated@example.com",
+                "updated");
 
         when(userRepository.findById(id)).thenReturn(Optional.of(user));
-        doThrow(new IllegalStateException("Keycloak update failed"))
-                .when(keycloakUserService)
+        doThrow(new IllegalStateException("Keycloak update failed")).when(keycloakUserService)
                 .updateProfile(user.getKeycloakId(), update);
 
-        assertThrows(
-                IllegalStateException.class,
-                () -> userService.updateUserProfile(id, update)
-        );
+        assertThrows(IllegalStateException.class, () -> userService.updateUserProfile(id, update));
 
         assertEquals("Original", user.getFirstName());
         verify(userMapper, never()).toResponse(any());
@@ -319,19 +255,12 @@ class UserServiceTest {
     void updateUserProfile_shouldRejectDeletedUser() {
         Long id = 1L;
         User user = createUser(id, UserStatus.DELETED);
-        UserProfileUpdateRequest update = new UserProfileUpdateRequest(
-                "Updated",
-                "User",
-                "updated@example.com",
-                "updated"
-        );
+        UserProfileUpdateRequest update = new UserProfileUpdateRequest("Updated", "User", "updated@example.com",
+                "updated");
 
         when(userRepository.findById(id)).thenReturn(Optional.of(user));
 
-        assertThrows(
-                UserDeletedException.class,
-                () -> userService.updateUserProfile(id, update)
-        );
+        assertThrows(UserDeletedException.class, () -> userService.updateUserProfile(id, update));
 
         verifyNoInteractions(keycloakUserService);
         verify(userMapper, never()).toResponse(any());
@@ -342,13 +271,9 @@ class UserServiceTest {
         Long id = 1L;
         User user = createUser(id, UserStatus.DELETED);
 
-        when(userRepository.findById(id))
-                .thenReturn(Optional.of(user));
+        when(userRepository.findById(id)).thenReturn(Optional.of(user));
 
-        assertThrows(
-                UserDeletedException.class,
-                () -> userService.updateUserStatus(id, UserStatus.DISABLED)
-        );
+        assertThrows(UserDeletedException.class, () -> userService.updateUserStatus(id, UserStatus.DISABLED));
 
         verifyNoInteractions(keycloakUserService);
         verify(userMapper, never()).toResponse(any());
@@ -359,16 +284,11 @@ class UserServiceTest {
         Long id = 1L;
         User user = createUser(id, UserStatus.ACTIVE);
 
-        when(userRepository.findById(id))
-                .thenReturn(Optional.of(user));
-        doThrow(new IllegalStateException("Keycloak update failed"))
-                .when(keycloakUserService)
+        when(userRepository.findById(id)).thenReturn(Optional.of(user));
+        doThrow(new IllegalStateException("Keycloak update failed")).when(keycloakUserService)
                 .setEnabled(user.getKeycloakId(), false);
 
-        assertThrows(
-                IllegalStateException.class,
-                () -> userService.updateUserStatus(id, UserStatus.DISABLED)
-        );
+        assertThrows(IllegalStateException.class, () -> userService.updateUserStatus(id, UserStatus.DISABLED));
 
         assertEquals(UserStatus.ACTIVE, user.getStatus());
         verify(userMapper, never()).toResponse(any());
@@ -379,11 +299,9 @@ class UserServiceTest {
         Long id = 1L;
         User user = createUser(id, UserStatus.DISABLED);
 
-        when(userRepository.findById(id))
-                .thenReturn(Optional.of(user));
+        when(userRepository.findById(id)).thenReturn(Optional.of(user));
 
-        when(userMapper.toResponse(user))
-                .thenReturn(response);
+        when(userMapper.toResponse(user)).thenReturn(response);
 
         UserResponse result = userService.updateUserStatus(id, UserStatus.ACTIVE);
 
@@ -399,13 +317,9 @@ class UserServiceTest {
     void updateUserStatus_shouldThrowWhenUserNotFoundForActiveStatus() {
         Long id = 99L;
 
-        when(userRepository.findById(id))
-                .thenReturn(Optional.empty());
+        when(userRepository.findById(id)).thenReturn(Optional.empty());
 
-        assertThrows(
-                UserNotFoundException.class,
-                () -> userService.updateUserStatus(id, UserStatus.ACTIVE)
-        );
+        assertThrows(UserNotFoundException.class, () -> userService.updateUserStatus(id, UserStatus.ACTIVE));
 
         verifyNoInteractions(keycloakUserService);
         verify(userMapper, never()).toResponse(any());
@@ -416,13 +330,9 @@ class UserServiceTest {
         Long id = 1L;
         User user = createUser(id, UserStatus.DELETED);
 
-        when(userRepository.findById(id))
-                .thenReturn(Optional.of(user));
+        when(userRepository.findById(id)).thenReturn(Optional.of(user));
 
-        assertThrows(
-                UserDeletedException.class,
-                () -> userService.updateUserStatus(id, UserStatus.ACTIVE)
-        );
+        assertThrows(UserDeletedException.class, () -> userService.updateUserStatus(id, UserStatus.ACTIVE));
 
         assertEquals(UserStatus.DELETED, user.getStatus());
 
@@ -437,8 +347,7 @@ class UserServiceTest {
         Long id = 1L;
         User user = createUser(id, UserStatus.ACTIVE);
 
-        when(userRepository.findById(id))
-                .thenReturn(Optional.of(user));
+        when(userRepository.findById(id)).thenReturn(Optional.of(user));
 
         userService.deleteUser(id);
 
@@ -453,13 +362,9 @@ class UserServiceTest {
     void deleteUser_shouldThrowWhenUserNotFound() {
         Long id = 99L;
 
-        when(userRepository.findById(id))
-                .thenReturn(Optional.empty());
+        when(userRepository.findById(id)).thenReturn(Optional.empty());
 
-        assertThrows(
-                UserNotFoundException.class,
-                () -> userService.deleteUser(id)
-        );
+        assertThrows(UserNotFoundException.class, () -> userService.deleteUser(id));
 
         verifyNoInteractions(keycloakUserService);
         verify(userRepository, never()).delete(any(User.class));
@@ -470,13 +375,9 @@ class UserServiceTest {
         Long id = 1L;
         User user = createUser(id, UserStatus.DELETED);
 
-        when(userRepository.findById(id))
-                .thenReturn(Optional.of(user));
+        when(userRepository.findById(id)).thenReturn(Optional.of(user));
 
-        assertThrows(
-                UserDeletedException.class,
-                () -> userService.deleteUser(id)
-        );
+        assertThrows(UserDeletedException.class, () -> userService.deleteUser(id));
 
         assertEquals(UserStatus.DELETED, user.getStatus());
 

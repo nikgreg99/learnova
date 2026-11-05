@@ -153,3 +153,42 @@ Run the full test suite (including Testcontainers integration tests):
 cd backend
 ./mvnw test
 ```
+
+---
+
+## Code Style & Formatting (Spotless & EditorConfig)
+
+Learnova enforces consistent code style and formatting across all machines and IDEs using **Spotless** and **EditorConfig**.
+
+- **`.editorconfig`**: Synchronizes basic editor rules (indentation style, tab width, trailing whitespace, line endings) across IDEs such as VS Code and IntelliJ IDEA.
+- **Spotless (`spotless-maven-plugin`)**: Enforces idiomatic Java formatting (Palantir Java Format with 4-space indentation, unused import removal, and clean record/annotation layout).
+
+### Verify Formatting (CI Check)
+
+To verify that all files comply with the formatting rules without modifying them:
+
+```bash
+cd backend
+./mvnw spotless:check
+```
+
+If any files violate the style guidelines, this command will report the discrepancies and fail the build.
+
+### Auto-Format Codebase
+
+To automatically format all Java source files across the project:
+
+```bash
+cd backend
+./mvnw spotless:apply
+```
+
+### Git Pre-Commit Hook (Automatic Formatting on Commit)
+
+A shared Git pre-commit hook is provided in `.githooks/` to automatically format staged Java files whenever you commit.
+
+To activate the hook on your local machine, run once from the project root:
+
+```bash
+git config core.hooksPath .githooks
+```
