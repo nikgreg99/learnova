@@ -4,23 +4,22 @@ set -e
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 BACKEND_DIR="${REPO_ROOT}/backend"
 
-# Check if any Java files are staged for commit
-STAGED_JAVA_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep '\.java$' || true)
+# Check if any Java or SQL files are staged for commit
+STAGED_FORMAT_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(java|sql)$' || true)
 
-if [ -n "$STAGED_JAVA_FILES" ]; then
-    echo "⚡ Auto-formatting Java files with Spotless before commit..."
+if [ -n "$STAGED_FORMAT_FILES" ]; then
+    echo "⚡ Auto-formatting Java and SQL files with Spotless before commit..."
 
     if [ -f "${BACKEND_DIR}/mvnw" ]; then
         (cd "${BACKEND_DIR}" && ./mvnw spotless:apply -q)
     fi
 
     # Re-stage the formatted files that were staged
-    echo "$STAGED_JAVA_FILES" | while IFS= read -r file; do
+    echo "$STAGED_FORMAT_FILES" | while IFS= read -r file; do
         if [ -f "${REPO_ROOT}/${file}" ]; then
             git add "${REPO_ROOT}/${file}"
         fi
     done
 
-    echo "✅ Spotless auto-formatting complete."
+    echo "✅ Spotless Java and SQL formatting complete."
 fi
-

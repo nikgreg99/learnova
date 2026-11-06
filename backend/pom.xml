@@ -254,6 +254,14 @@
 						<trimTrailingWhitespace/>
 						<endWithNewline/>
 					</java>
+					<sql>
+						<includes>
+							<include>src/main/resources/db/migration/**/*.sql</include>
+						</includes>
+						<dbeaver/>
+						<trimTrailingWhitespace/>
+						<endWithNewline/>
+					</sql>
 				</configuration>
 			</plugin>
 
