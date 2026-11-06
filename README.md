@@ -141,6 +141,7 @@ V<Version>__<Description>.sql
 
 - **Execution Tracking:** Flyway maintains a `flyway_schema_history` table in PostgreSQL. It records the version, description, execution timestamp, and a **checksum** of each applied script. Previously applied migrations are never re-run.
 - **Checksum Integrity:** Never alter an existing migration script after it has been merged or applied. Flyway compares checksums on application startup and will fail to boot if a mismatch is detected.
+- **Formatting Existing Migrations:** Formatting V1–V4 changes their checksums. Databases that already applied the previous versions must have their Flyway checksums reconciled through the deployment process before starting the updated application.
 - **Failure Handling:** If a migration script contains invalid SQL or fails during execution, Spring Boot immediately halts context initialization. The database will not be left in an unversioned state, and the application will not serve traffic until the migration error is resolved.
 
 ---
@@ -169,7 +170,7 @@ To allow unauthenticated pulls, change the GHCR package visibility to **Public**
 Learnova enforces consistent code style and formatting across all machines and IDEs using **Spotless** and **EditorConfig**.
 
 - **`.editorconfig`**: Synchronizes basic editor rules (indentation style, tab width, trailing whitespace, line endings) across IDEs such as VS Code and IntelliJ IDEA.
-- **Spotless (`spotless-maven-plugin`)**: Enforces idiomatic Java formatting (Palantir Java Format with 4-space indentation, unused import removal, and clean record/annotation layout).
+- **Spotless (`spotless-maven-plugin`)**: Enforces idiomatic Java formatting (Palantir Java Format with 4-space indentation, unused import removal, and clean record/annotation layout) and formats Flyway SQL migrations with Prettier and `prettier-plugin-sql`.
 
 ### Verify Formatting (CI Check)
 
@@ -184,7 +185,7 @@ If any files violate the style guidelines, this command will report the discrepa
 
 ### Auto-Format Codebase
 
-To automatically format all Java source files across the project:
+To automatically format Java source files and Flyway SQL migration scripts:
 
 ```bash
 cd backend

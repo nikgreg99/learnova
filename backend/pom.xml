@@ -254,6 +254,25 @@
 						<trimTrailingWhitespace/>
 						<endWithNewline/>
 					</java>
+					<sql>
+						<includes>
+							<include>src/main/resources/db/migration/**/*.sql</include>
+						</includes>
+						<prettier>
+							<devDependencies>
+								<prettier>3.9.10</prettier>
+								<prettier-plugin-sql>0.20.0</prettier-plugin-sql>
+							</devDependencies>
+							<config>
+								<plugins>prettier-plugin-sql</plugins>
+								<language>postgresql</language>
+								<keywordCase>upper</keywordCase>
+								<dataTypeCase>upper</dataTypeCase>
+							</config>
+						</prettier>
+						<trimTrailingWhitespace/>
+						<endWithNewline/>
+					</sql>
 				</configuration>
 			</plugin>
 
