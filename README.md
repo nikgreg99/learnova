@@ -170,7 +170,7 @@ To allow unauthenticated pulls, change the GHCR package visibility to **Public**
 Learnova enforces consistent code style and formatting across all machines and IDEs using **Spotless** and **EditorConfig**.
 
 - **`.editorconfig`**: Synchronizes basic editor rules (indentation style, tab width, trailing whitespace, line endings) across IDEs such as VS Code and IntelliJ IDEA.
-- **Spotless (`spotless-maven-plugin`)**: Enforces idiomatic Java formatting (Palantir Java Format with 4-space indentation, unused import removal, and clean record/annotation layout) and formats Flyway SQL migrations with the DBeaver formatter.
+- **Spotless (`spotless-maven-plugin`)**: Enforces idiomatic Java formatting (Palantir Java Format with 4-space indentation, unused import removal, and clean record/annotation layout) and formats Flyway SQL migrations with Prettier and `prettier-plugin-sql`.
 
 ### Verify Formatting (CI Check)
 
