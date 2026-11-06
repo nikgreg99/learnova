@@ -52,7 +52,7 @@ spring:
         concurrency: 1
         max-concurrency: 5
 
-        default-requed-rejected: false
+        default-requeue-rejected: false
 
         retry:
           enabled: true

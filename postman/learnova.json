@@ -387,7 +387,7 @@
     "oauth2": [
       {
         "key": "clientId",
-        "value": "{{auth_secret_07a7}}",
+        "value": "{{keycloakClientName}}",
         "type": "string"
       },
       {
@@ -456,6 +456,10 @@
       "value": "learnova"
     },
     {
+      "key": "keycloakClientName",
+      "value": "learnova-postman"
+    },
+    {
       "key": "courseId",
       "value": "1"
     },
@@ -498,10 +502,6 @@
     {
       "key": "userPassword",
       "value": ""
-    },
-    {
-      "key": "auth_secret_07a7",
-      "secret": true
     }
   ]
 }
