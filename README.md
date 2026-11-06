@@ -154,6 +154,14 @@ cd backend
 ./mvnw test
 ```
 
+## Continuous Integration and Container Image
+
+The GitHub Actions workflow runs on pushes to `main` and version tags matching `v*`. It builds and tests the backend, runs PMD checks, then publishes the Docker image to `ghcr.io/<owner>/learnova`. PMD rules are defined in `backend/config/pmd/ruleset.xml`, and any violations fail the Maven `verify` phase.
+
+Each published image has a `sha-<commit-sha>` tag; version-tag pushes also receive the matching release tag (for example, `v1.2.3`). The workflow verifies that the image can be pulled by digest and that the registry manifest matches the generated SHA-256 digest. The tags and digest are reported in the workflow run summary.
+
+To allow unauthenticated pulls, change the GHCR package visibility to **Public** in the package settings. Private packages remain pullable by users and workflows with package read access.
+
 ---
 
 ## Code Style & Formatting (Spotless & EditorConfig)
