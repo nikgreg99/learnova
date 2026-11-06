@@ -114,6 +114,11 @@
 			<optional>true</optional>
 		</dependency>
 
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-amqp</artifactId>
+        </dependency>
+
 		<!-- Tests -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -172,6 +177,13 @@
 			<version>2.0.5</version>
 			<scope>test</scope>
 		</dependency>
+
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers-rabbitmq</artifactId>
+            <version>2.0.5</version>
+            <scope>test</scope>
+        </dependency>
 
 	</dependencies>
 
