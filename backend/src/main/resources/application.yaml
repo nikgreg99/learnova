@@ -61,6 +61,11 @@ spring:
           multiplier: 2.0
           max-interval: 10000ms
 
+learnova:
+  rate-limit:
+    authenticated-requests-per-minute: ${RATE_LIMIT_AUTHENTICATED_PER_MINUTE:100}
+    public-requests-per-minute: ${RATE_LIMIT_PUBLIC_PER_MINUTE:10}
+
 keycloak:
   scheme: ${KEYCLOAK_SCHEME:http}
   host: ${KEYCLOAK_HOST:localhost}

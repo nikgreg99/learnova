@@ -155,6 +155,12 @@ cd backend
 ./mvnw test
 ```
 
+## API Rate Limiting
+
+Requests to `/api/v1/**` are rate limited using a one-minute window: authenticated requests are limited to 100 per user, and public user registration requests are limited to 10 per client IP address. Rejected requests receive HTTP `429 Too Many Requests` and a `Retry-After` header.
+
+The initial counter store is bounded, in-memory, and local to each application instance. Configure limits with `RATE_LIMIT_AUTHENTICATED_PER_MINUTE` and `RATE_LIMIT_PUBLIC_PER_MINUTE`. For multi-instance deployments, replace the `RateLimitStore` implementation with a shared store such as Redis so limits are consistent across instances.
+
 ## Continuous Integration and Container Image
 
 The GitHub Actions workflow runs on pushes to `main` and version tags matching `v*`. It builds and tests the backend, runs PMD checks, then publishes the Docker image to `ghcr.io/<owner>/learnova`. PMD rules are defined in `backend/config/pmd/ruleset.xml`, and any violations fail the Maven `verify` phase.
