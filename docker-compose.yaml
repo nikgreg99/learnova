@@ -150,6 +150,8 @@ services:
     image: ${REDIS_IMAGE_NAME:-redis}:${REDIS_IMAGE_VERSION:-7-alpine}
     container_name: learnova-redis
     restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s

@@ -1,6 +1,7 @@
 
 package com.learnova.controller;
 
+import com.learnova.config.ratelimit.RateLimitInterceptor;
 import com.learnova.config.security.SecurityConfig;
 import com.learnova.dto.course.CourseRequest;
 import com.learnova.dto.course.CourseResponse;
@@ -49,11 +50,16 @@ class CourseControllerTest {
     @MockitoBean
     private CourseService courseService;
 
+    @MockitoBean
+    private RateLimitInterceptor rateLimitInterceptor;
+
     private CourseRequest courseRequest;
     private CourseResponse courseResponse;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
+        when(rateLimitInterceptor.preHandle(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any())).thenReturn(true);
         courseRequest = new CourseRequest("Java Fundamentals", "Introduction to Java", new BigDecimal("49.90"));
 
         courseResponse = new CourseResponse(1L, courseRequest.name(), courseRequest.description(),

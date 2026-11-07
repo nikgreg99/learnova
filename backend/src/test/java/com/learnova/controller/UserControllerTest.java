@@ -1,5 +1,6 @@
 package com.learnova.controller;
 
+import com.learnova.config.ratelimit.RateLimitInterceptor;
 import com.learnova.dto.user.UserRequest;
 import com.learnova.dto.user.UserProfileUpdateRequest;
 import com.learnova.dto.user.UserResponse;
@@ -10,6 +11,7 @@ import com.learnova.exception.UserNotFoundException;
 import com.learnova.exception.UserProfileConflictException;
 import com.learnova.model.UserStatus;
 import com.learnova.service.UserService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -47,6 +49,14 @@ class UserControllerTest {
 
     @MockitoBean
     private MessageSource messageSource;
+
+    @MockitoBean
+    private RateLimitInterceptor rateLimitInterceptor;
+
+    @BeforeEach
+    void allowRequestsThroughRateLimitInterceptor() throws Exception {
+        when(rateLimitInterceptor.preHandle(any(), any(), any())).thenReturn(true);
+    }
 
     private UserResponse createUserResponse(UserStatus status) {
         return new UserResponse(1L, "Mario", "Rossi", "mario.rossi@example.com", "mrossi", Set.of("STUDENT"), status,

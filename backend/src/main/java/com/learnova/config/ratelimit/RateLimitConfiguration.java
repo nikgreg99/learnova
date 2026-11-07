@@ -21,13 +21,4 @@ public class RateLimitConfiguration {
         return new RateLimitInterceptor(store, properties);
     }
 
-    @Bean
-    WebMvcConfigurer rateLimitWebConfigurer(RateLimitInterceptor interceptor) {
-        return new WebMvcConfigurer() {
-            @Override
-            public void addInterceptors(InterceptorRegistry registry) {
-                registry.addInterceptor(interceptor).addPathPatterns("/api/v1/**");
-            }
-        };
-    }
 }

@@ -1,6 +1,7 @@
 
 package com.learnova.controller;
 
+import com.learnova.config.ratelimit.RateLimitInterceptor;
 import com.learnova.config.security.SecurityConfig;
 import com.learnova.dto.auth.AuthUserResponse;
 import com.learnova.service.AuthService;
@@ -40,10 +41,14 @@ class AuthControllerTest {
     @MockitoBean
     private AuthService authService;
 
+    @MockitoBean
+    private RateLimitInterceptor rateLimitInterceptor;
+
     private AuthUserResponse authUserResponse;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
+        when(rateLimitInterceptor.preHandle(any(), any(), any())).thenReturn(true);
         authUserResponse = new AuthUserResponse("123456", "test-student", "test-student@learnova.local", "Test",
                 "Student");
     }
