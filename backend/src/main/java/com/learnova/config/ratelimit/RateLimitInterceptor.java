@@ -3,7 +3,6 @@ package com.learnova.config.ratelimit;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.time.Duration;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -14,7 +13,6 @@ import org.springframework.web.servlet.HandlerInterceptor;
 
 public class RateLimitInterceptor implements HandlerInterceptor {
 
-    private static final Duration WINDOW = Duration.ofMinutes(1);
     private static final String PUBLIC_REGISTRATION_PATH = "/api/v1/users";
 
     private final RateLimitStore store;
@@ -28,18 +26,24 @@ public class RateLimitInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
             throws IOException {
-        boolean publicRegistration = "POST".equals(request.getMethod())
-                && PUBLIC_REGISTRATION_PATH.equals(request.getRequestURI());
+        String path = request.getRequestURI().substring(request.getContextPath().length());
+        boolean publicRegistration = "POST".equals(request.getMethod()) && PUBLIC_REGISTRATION_PATH.equals(path);
+        String authenticatedUser = authenticatedIdentity();
+        String bucket;
+        int limit;
 
-        String identity = publicRegistration ? "ip:" + request.getRemoteAddr() : authenticatedIdentity();
-        if (identity == null) {
-            identity = "ip:" + request.getRemoteAddr();
+        if (publicRegistration) {
+            bucket = "registration:ip:" + request.getRemoteAddr();
+            limit = properties.getPublicRequestsPerMinute();
+        } else if (authenticatedUser != null) {
+            bucket = "authenticated:" + authenticatedUser;
+            limit = properties.getAuthenticatedRequestsPerMinute();
+        } else {
+            bucket = "anonymous:ip:" + request.getRemoteAddr();
+            limit = properties.getAnonymousRequestsPerMinute();
         }
 
-        int limit = publicRegistration
-                ? properties.getPublicRequestsPerMinute()
-                : properties.getAuthenticatedRequestsPerMinute();
-        RateLimitDecision decision = store.consume(identity, limit, WINDOW);
+        RateLimitDecision decision = store.consume(bucket, limit, properties.getWindow());
         if (decision.allowed()) {
             return true;
         }

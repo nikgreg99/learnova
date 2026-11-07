@@ -1,9 +1,9 @@
 package com.learnova.config.ratelimit;
 
-import java.time.Clock;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -18,8 +18,8 @@ public class RateLimitConfiguration implements WebMvcConfigurer {
     }
 
     @Bean
-    RateLimitStore rateLimitStore() {
-        return new InMemoryRateLimitStore(Clock.systemUTC());
+    RateLimitStore rateLimitStore(StringRedisTemplate redisTemplate) {
+        return new RedisRateLimitStore(redisTemplate);
     }
 
     @Bean

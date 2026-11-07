@@ -63,8 +63,10 @@ spring:
 
 learnova:
   rate-limit:
+    window: ${RATE_LIMIT_WINDOW:1m}
     authenticated-requests-per-minute: ${RATE_LIMIT_AUTHENTICATED_PER_MINUTE:100}
     public-requests-per-minute: ${RATE_LIMIT_PUBLIC_PER_MINUTE:10}
+    anonymous-requests-per-minute: ${RATE_LIMIT_ANONYMOUS_PER_MINUTE:60}
 
 keycloak:
   scheme: ${KEYCLOAK_SCHEME:http}

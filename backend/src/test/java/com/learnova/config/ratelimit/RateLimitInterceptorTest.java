@@ -30,11 +30,12 @@ class RateLimitInterceptorTest {
     void preHandle_shouldLimitPublicRegistrationByClientAddress() throws Exception {
         MockHttpServletRequest request = request("POST", "/api/v1/users", "192.0.2.10");
         MockHttpServletResponse response = new MockHttpServletResponse();
-        when(store.consume("ip:192.0.2.10", 10, Duration.ofMinutes(1))).thenReturn(RateLimitDecision.permit());
+        when(store.consume("registration:ip:192.0.2.10", 10, Duration.ofMinutes(1)))
+                .thenReturn(RateLimitDecision.permit());
 
         assertTrue(interceptor.preHandle(request, response, new Object()));
 
-        verify(store).consume("ip:192.0.2.10", 10, Duration.ofMinutes(1));
+        verify(store).consume("registration:ip:192.0.2.10", 10, Duration.ofMinutes(1));
     }
 
     @Test
@@ -43,18 +44,45 @@ class RateLimitInterceptorTest {
                 .setAuthentication(new TestingAuthenticationToken("user-123", "credentials", "ROLE_USER"));
         MockHttpServletRequest request = request("GET", "/api/v1/courses", "192.0.2.10");
         MockHttpServletResponse response = new MockHttpServletResponse();
-        when(store.consume("user:user-123", 100, Duration.ofMinutes(1))).thenReturn(RateLimitDecision.permit());
+        when(store.consume("authenticated:user:user-123", 100, Duration.ofMinutes(1)))
+                .thenReturn(RateLimitDecision.permit());
 
         assertTrue(interceptor.preHandle(request, response, new Object()));
 
-        verify(store).consume("user:user-123", 100, Duration.ofMinutes(1));
+        verify(store).consume("authenticated:user:user-123", 100, Duration.ofMinutes(1));
+    }
+
+    @Test
+    void preHandle_shouldLimitAnonymousRequestsSeparatelyByClientAddress() throws Exception {
+        MockHttpServletRequest request = request("GET", "/api/v1/courses", "192.0.2.10");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        when(store.consume("anonymous:ip:192.0.2.10", 60, Duration.ofMinutes(1)))
+                .thenReturn(RateLimitDecision.permit());
+
+        assertTrue(interceptor.preHandle(request, response, new Object()));
+
+        verify(store).consume("anonymous:ip:192.0.2.10", 60, Duration.ofMinutes(1));
+    }
+
+    @Test
+    void preHandle_shouldMatchRegistrationWithContextPath() throws Exception {
+        MockHttpServletRequest request = request("POST", "/learnova/api/v1/users", "192.0.2.10");
+        request.setContextPath("/learnova");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        when(store.consume("registration:ip:192.0.2.10", 10, Duration.ofMinutes(1)))
+                .thenReturn(RateLimitDecision.permit());
+
+        assertTrue(interceptor.preHandle(request, response, new Object()));
+
+        verify(store).consume("registration:ip:192.0.2.10", 10, Duration.ofMinutes(1));
     }
 
     @Test
     void preHandle_shouldReturnTooManyRequestsAndRetryAfterWhenLimitIsExceeded() throws Exception {
         MockHttpServletRequest request = request("POST", "/api/v1/users", "192.0.2.10");
         MockHttpServletResponse response = new MockHttpServletResponse();
-        when(store.consume("ip:192.0.2.10", 10, Duration.ofMinutes(1))).thenReturn(RateLimitDecision.reject(42));
+        when(store.consume("registration:ip:192.0.2.10", 10, Duration.ofMinutes(1)))
+                .thenReturn(RateLimitDecision.reject(42));
 
         assertFalse(interceptor.preHandle(request, response, new Object()));
 

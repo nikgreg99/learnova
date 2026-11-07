@@ -157,9 +157,11 @@ cd backend
 
 ## API Rate Limiting
 
-Requests to `/api/v1/**` are rate limited using a one-minute window: authenticated requests are limited to 100 per user, and public user registration requests are limited to 10 per client IP address. Rejected requests receive HTTP `429 Too Many Requests` and a `Retry-After` header.
+Requests to `/api/v1/**` are rate limited using a configurable fixed window (`RATE_LIMIT_WINDOW`, default `1m`). Authenticated requests are limited per user, public `POST /api/v1/users` registrations per client IP, and other anonymous requests per client IP. The default limits are 100, 10, and 60 requests per window respectively; configure them with `RATE_LIMIT_AUTHENTICATED_PER_MINUTE`, `RATE_LIMIT_PUBLIC_PER_MINUTE`, and `RATE_LIMIT_ANONYMOUS_PER_MINUTE`. Rejected requests receive HTTP `429 Too Many Requests` and a `Retry-After` header.
 
-The initial counter store is bounded, in-memory, and local to each application instance. Configure limits with `RATE_LIMIT_AUTHENTICATED_PER_MINUTE` and `RATE_LIMIT_PUBLIC_PER_MINUTE`. For multi-instance deployments, replace the `RateLimitStore` implementation with a shared store such as Redis so limits are consistent across instances.
+Redis is the rate-limit store in all environments and uses atomic counters so limits are consistent across application instances. The Docker Compose stack starts Redis and waits for it to be healthy before starting the backend. The rate limiter fails explicitly if Redis cannot return a decision; it does not silently bypass limits. Client IP is taken from the servlet connection, not untrusted forwarding headers; configure a trusted proxy to provide accurate client addresses behind a proxy.
+
+All Compose image names and tags are configurable independently in `.env`, for example `KEYCLOAK_IMAGE_NAME` and `KEYCLOAK_IMAGE_VERSION`. The backend build-stage images (`MAVEN_*` and `JAVA_RUNTIME_*`) and the resulting application image (`LEARNOVA_BACKEND_*`) follow the same convention.
 
 ## Continuous Integration and Container Image
 
@@ -198,11 +200,11 @@ cd backend
 ./mvnw spotless:apply
 ```
 
-### Git Pre-Commit Hook (Automatic Formatting on Commit)
+### Git Pre-Commit Hook (Secret Check and Formatting)
 
-A shared Git pre-commit hook is provided in `.githooks/` to automatically format staged Java files whenever you commit.
+A shared Git pre-commit hook is provided in `.githooks/`. It blocks staged `.env` files (except `.env.example`) and checks staged additions for common hard-coded credential assignments and private-key markers. It then formats only staged Java and SQL files under `backend/`; unstaged edits in those files are preserved.
 
-To activate the hook on your local machine, run once from the project root:
+The hook requires Bash and the Maven wrapper. Activate it once from the project root:
 
 ```bash
 git config core.hooksPath .githooks

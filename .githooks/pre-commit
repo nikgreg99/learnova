@@ -1,25 +1,135 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 BACKEND_DIR="${REPO_ROOT}/backend"
+SECRET_ASSIGNMENT_REGEX="(password|passwd|passphrase|pwd|secret|token|api[-_]?key|private[-_]?key|access[-_]?key|client[-_]?secret)[[:space:]]*[\"']?[[:space:]]*[:=][[:space:]]*[\"']?([^[:space:],;\"']+)"
 
-# Check if any Java or SQL files are staged for commit
-STAGED_FORMAT_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(java|sql)$' || true)
+declare -a STAGED_FILES=()
+while IFS= read -r -d '' file; do
+    STAGED_FILES+=("$file")
+done < <(git diff --cached --name-only -z --diff-filter=ACMR)
 
-if [ -n "$STAGED_FORMAT_FILES" ]; then
-    echo "⚡ Auto-formatting Java and SQL files with Spotless before commit..."
+is_env_file() {
+    local name="${1##*/}"
 
-    if [ -f "${BACKEND_DIR}/mvnw" ]; then
-        (cd "${BACKEND_DIR}" && ./mvnw spotless:apply -q)
+    case "$name" in
+        .env|.env.*)
+            case "$name" in
+                .env.example|.env.*.example) return 1 ;;
+                *) return 0 ;;
+            esac
+            ;;
+        *) return 1 ;;
+    esac
+}
+
+is_placeholder() {
+    local value
+    value="$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')"
+
+    case "$value" in
+        ""|change_me|change-me|changeme|your_*|replace_*|example*|placeholder*|sample*|dummy*|test|test-*|none|null|unset|'<'*|'${'*|'$('*|'%') return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+scan_staged_additions() {
+    local file="$1"
+    local line
+
+    while IFS= read -r line; do
+        case "$line" in
+            +++*) continue ;;
+            +*) line="${line:1}" ;;
+            *) continue ;;
+        esac
+
+        if [[ "$line" =~ $SECRET_ASSIGNMENT_REGEX ]]; then
+            if ! is_placeholder "${BASH_REMATCH[2]}"; then
+                printf 'Possible hard-coded credential in staged file: %s\n' "$file"
+                return 1
+            fi
+        fi
+
+        if [[ "$line" =~ -----BEGIN[[:space:]].*PRIVATE[[:space:]]KEY----- ]]; then
+            printf 'Private key material in staged file: %s\n' "$file"
+            return 1
+        fi
+    done < <(git diff --cached --no-ext-diff --unified=0 -- "$file")
+}
+
+shopt -s nocasematch
+secret_found=0
+for file in "${STAGED_FILES[@]}"; do
+    if is_env_file "$file"; then
+        printf 'Refusing to commit environment file: %s (use .env.example for templates)\n' "$file"
+        secret_found=1
+        continue
     fi
 
-    # Re-stage the formatted files that were staged
-    echo "$STAGED_FORMAT_FILES" | while IFS= read -r file; do
-        if [ -f "${REPO_ROOT}/${file}" ]; then
-            git add "${REPO_ROOT}/${file}"
+    if ! scan_staged_additions "$file"; then
+        secret_found=1
+    fi
+done
+shopt -u nocasematch
+
+if [ "$secret_found" -ne 0 ]; then
+    echo "Commit blocked. Remove the credential or keep local environment files out of Git."
+    exit 1
+fi
+
+declare -a FORMAT_FILES=()
+spotless_files=""
+for file in "${STAGED_FILES[@]}"; do
+    case "$file" in
+        backend/*.java|backend/*.sql|backend/**/*.java|backend/**/*.sql)
+            FORMAT_FILES+=("$file")
+            spotless_file="${file#backend/}"
+            if [ -n "$spotless_files" ]; then
+                spotless_files="${spotless_files},"
+            fi
+            spotless_files="${spotless_files}${spotless_file}"
+            ;;
+    esac
+done
+
+if [ "${#FORMAT_FILES[@]}" -eq 0 ]; then
+    exit 0
+fi
+
+TEMP_DIR="$(mktemp -d)"
+restore_working_tree() {
+    local file
+
+    for file in "${FORMAT_FILES[@]}"; do
+        if [ -f "${TEMP_DIR}/${file}" ]; then
+            cp -p "${TEMP_DIR}/${file}" "${REPO_ROOT}/${file}"
+        else
+            rm -f -- "${REPO_ROOT}/${file}"
         fi
     done
+    rm -rf -- "$TEMP_DIR"
+}
+trap restore_working_tree EXIT
 
-    echo "✅ Spotless Java and SQL formatting complete."
+for file in "${FORMAT_FILES[@]}"; do
+    if [ -f "${REPO_ROOT}/${file}" ]; then
+        mkdir -p "${TEMP_DIR}/$(dirname "$file")"
+        cp -p "${REPO_ROOT}/${file}" "${TEMP_DIR}/${file}"
+    fi
+    git show ":${file}" > "${REPO_ROOT}/${file}"
+done
+
+echo "Formatting staged Java and SQL files with Spotless..."
+if [ -x "${BACKEND_DIR}/mvnw" ]; then
+    (cd "$BACKEND_DIR" && ./mvnw -q "-DspotlessFiles=${spotless_files}" spotless:apply)
+elif command -v mvn >/dev/null 2>&1; then
+    (cd "$BACKEND_DIR" && mvn -q "-DspotlessFiles=${spotless_files}" spotless:apply)
+else
+    echo "Maven wrapper or mvn was not found; staged files were not formatted." >&2
+    exit 1
 fi
+
+git add -- "${FORMAT_FILES[@]}"
+echo "Staged formatting complete."
