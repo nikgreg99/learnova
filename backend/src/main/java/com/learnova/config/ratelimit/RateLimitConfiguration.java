@@ -4,6 +4,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 @EnableConfigurationProperties(RateLimitProperties.class)
@@ -17,5 +19,15 @@ public class RateLimitConfiguration {
     @Bean
     RateLimitInterceptor rateLimitInterceptor(RateLimitStore store, RateLimitProperties properties) {
         return new RateLimitInterceptor(store, properties);
+    }
+
+    @Bean
+    WebMvcConfigurer rateLimitWebConfigurer(RateLimitInterceptor interceptor) {
+        return new WebMvcConfigurer() {
+            @Override
+            public void addInterceptors(InterceptorRegistry registry) {
+                registry.addInterceptor(interceptor).addPathPatterns("/api/v1/**");
+            }
+        };
     }
 }
