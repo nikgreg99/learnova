@@ -1,5 +1,6 @@
 package com.learnova.config.ratelimit;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,13 +10,10 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 @EnableConfigurationProperties(RateLimitProperties.class)
+@RequiredArgsConstructor
 public class RateLimitConfiguration implements WebMvcConfigurer {
 
     private final RateLimitInterceptor interceptor;
-
-    public RateLimitConfiguration(RateLimitInterceptor interceptor) {
-        this.interceptor = interceptor;
-    }
 
     @Bean
     RateLimitStore rateLimitStore(StringRedisTemplate redisTemplate) {

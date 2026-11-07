@@ -3,6 +3,8 @@ package com.learnova.config.ratelimit;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -11,17 +13,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.servlet.HandlerInterceptor;
 
+@RequiredArgsConstructor
 public class RateLimitInterceptor implements HandlerInterceptor {
 
     private static final String PUBLIC_REGISTRATION_PATH = "/api/v1/users";
 
     private final RateLimitStore store;
     private final RateLimitProperties properties;
-
-    public RateLimitInterceptor(RateLimitStore store, RateLimitProperties properties) {
-        this.store = store;
-        this.properties = properties;
-    }
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
@@ -49,7 +47,7 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         }
 
         response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
-        response.setHeader("Retry-After", Long.toString(decision.retryAfterSeconds()));
+        response.setHeader(HttpHeaders.RETRY_AFTER, Long.toString(decision.retryAfterSeconds()));
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.getWriter().write(
                 "{\"type\":\"about:blank\",\"title\":\"Too Many Requests\",\"status\":429,\"detail\":\"Rate limit exceeded.\"}");

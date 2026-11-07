@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 import java.time.Duration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpHeaders;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.authentication.TestingAuthenticationToken;
@@ -87,7 +88,7 @@ class RateLimitInterceptorTest {
         assertFalse(interceptor.preHandle(request, response, new Object()));
 
         assertEquals(429, response.getStatus());
-        assertEquals("42", response.getHeader("Retry-After"));
+        assertEquals("42", response.getHeader(HttpHeaders.RETRY_AFTER));
     }
 
     private MockHttpServletRequest request(String method, String path, String remoteAddress) {

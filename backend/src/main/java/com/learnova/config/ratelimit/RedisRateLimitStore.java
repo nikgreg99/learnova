@@ -2,9 +2,11 @@ package com.learnova.config.ratelimit;
 
 import java.time.Duration;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 
+@RequiredArgsConstructor
 public class RedisRateLimitStore implements RateLimitStore {
 
     private static final String KEY_PREFIX = "learnova:rate-limit:";
@@ -20,10 +22,6 @@ public class RedisRateLimitStore implements RateLimitStore {
             """, Long.class);
 
     private final StringRedisTemplate redisTemplate;
-
-    public RedisRateLimitStore(StringRedisTemplate redisTemplate) {
-        this.redisTemplate = redisTemplate;
-    }
 
     @Override
     public RateLimitDecision consume(String key, int limit, Duration window) {
