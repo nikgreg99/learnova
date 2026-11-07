@@ -28,7 +28,7 @@ services:
       start_period: 10s
 
   keycloak:
-    image: ${KEYCLOAK_IMAGE:-quay.io/keycloak/keycloak:latest}
+    image: ${KEYCLOAK_IMAGE_NAME:-quay.io/keycloak/keycloak}:${KEYCLOAK_IMAGE_VERSION:-26.4.7}
     container_name: learnova-keycloak
     command: ${KEYCLOAK_COMMAND:-start-dev}
     restart: unless-stopped
@@ -62,7 +62,7 @@ services:
       start_period: 30s
 
   mailpit:
-    image: ${MAILPIT_IMAGE:-axllent/mailpit:latest}
+    image: ${MAILPIT_IMAGE_NAME:-axllent/mailpit}:${MAILPIT_IMAGE_VERSION:-latest}
     container_name: learnova-mailpit
     restart: unless-stopped
     ports:
@@ -72,9 +72,15 @@ services:
       MP_MAX_MESSAGES: 500
 
   learnova-backend:
+    image: ${LEARNOVA_BACKEND_IMAGE_NAME:-learnova-backend}:${LEARNOVA_BACKEND_IMAGE_VERSION:-local}
     build:
       context: ./backend
       dockerfile: Dockerfile
+      args:
+        MAVEN_IMAGE_NAME: ${MAVEN_IMAGE_NAME:-maven}
+        MAVEN_IMAGE_VERSION: ${MAVEN_IMAGE_VERSION:-3.9-eclipse-temurin-21}
+        JAVA_RUNTIME_IMAGE_NAME: ${JAVA_RUNTIME_IMAGE_NAME:-eclipse-temurin}
+        JAVA_RUNTIME_IMAGE_VERSION: ${JAVA_RUNTIME_IMAGE_VERSION:-21-jre}
 
     container_name: learnova-backend
     restart: unless-stopped
@@ -95,6 +101,12 @@ services:
       KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/${KEYCLOAK_REALM:-learnova}/protocol/openid-connect/certs
       MAIL_HOST: mailpit
       MAIL_PORT: 1025
+      RATE_LIMIT_WINDOW: ${RATE_LIMIT_WINDOW:-1m}
+      RATE_LIMIT_AUTHENTICATED_PER_MINUTE: ${RATE_LIMIT_AUTHENTICATED_PER_MINUTE:-100}
+      RATE_LIMIT_PUBLIC_PER_MINUTE: ${RATE_LIMIT_PUBLIC_PER_MINUTE:-10}
+      RATE_LIMIT_ANONYMOUS_PER_MINUTE: ${RATE_LIMIT_ANONYMOUS_PER_MINUTE:-60}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
 
     ports:
       - "${APP_BIND_ADDRESS:-127.0.0.1}:${APP_PORT:-8080}:8080"
@@ -108,9 +120,11 @@ services:
         condition: service_started
       rabbitmq:
         condition: service_healthy
+      redis:
+        condition: service_healthy
 
   rabbitmq:
-    image: ${RABBITMQ_IMAGE:-rabbitmq:4-management}
+    image: ${RABBITMQ_IMAGE_NAME:-rabbitmq}:${RABBITMQ_IMAGE_VERSION:-4-management}
     container_name: learnova-rabbitmq
     restart: unless-stopped
 
@@ -130,6 +144,16 @@ services:
       test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
       interval: 10s
       timeout: 5s
+      retries: 10
+
+  redis:
+    image: ${REDIS_IMAGE_NAME:-redis}:${REDIS_IMAGE_VERSION:-7-alpine}
+    container_name: learnova-redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
       retries: 10
 
 volumes:
