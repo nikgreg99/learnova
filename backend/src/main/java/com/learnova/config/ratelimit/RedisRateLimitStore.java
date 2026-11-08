@@ -29,11 +29,8 @@ public class RedisRateLimitStore implements RateLimitStore {
             throw new IllegalArgumentException("Rate limit and window must be positive.");
         }
 
-        long retryAfterMillis = redisTemplate.execute(
-                CONSUME_SCRIPT,
-                List.of(KEY_PREFIX + key),
-                Long.toString(window.toMillis()),
-                Integer.toString(limit));
+        long retryAfterMillis = redisTemplate.execute(CONSUME_SCRIPT, List.of(KEY_PREFIX + key),
+                Long.toString(window.toMillis()), Integer.toString(limit));
         if (retryAfterMillis <= 0) {
             return RateLimitDecision.permit();
         }

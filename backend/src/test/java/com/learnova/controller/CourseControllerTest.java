@@ -3,8 +3,11 @@ package com.learnova.controller;
 
 import com.learnova.config.ratelimit.RateLimitInterceptor;
 import com.learnova.config.security.SecurityConfig;
+import com.learnova.dto.course.CoursePatchRequest;
 import com.learnova.dto.course.CourseRequest;
 import com.learnova.dto.course.CourseResponse;
+import com.learnova.dto.course.CourseStatusUpdateRequest;
+import com.learnova.model.CourseStatus;
 import com.learnova.service.CourseService;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -29,10 +32,11 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -62,7 +66,7 @@ class CourseControllerTest {
                 org.mockito.ArgumentMatchers.any())).thenReturn(true);
         courseRequest = new CourseRequest("Java Fundamentals", "Introduction to Java", new BigDecimal("49.90"));
 
-        courseResponse = new CourseResponse(1L, courseRequest.name(), courseRequest.description(),
+        courseResponse = new CourseResponse(1L, courseRequest.name(), null, null, courseRequest.description(),
                 courseRequest.price(), null, null);
     }
 
@@ -155,5 +159,28 @@ class CourseControllerTest {
                 .andExpect(status().isNoContent());
 
         verify(courseService).deleteCourseById(courseResponse.id());
+    }
+
+    @Test
+    void patchCourse_shouldPartiallyUpdateCourseWhenCourseExists() throws Exception {
+        CoursePatchRequest patchRequest = new CoursePatchRequest("Patched Java", null, null, null);
+
+        when(courseService.patchCourse(courseResponse.id(), patchRequest)).thenReturn(Optional.of(courseResponse));
+
+        mockMvc.perform(patch("/api/v1/courses/{id}", courseResponse.id()).with(jwt())
+                .contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(patchRequest)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.id").value(courseResponse.id()));
+    }
+
+    @Test
+    void updateCourseStatus_shouldUpdateCourseStatusWhenCourseExists() throws Exception {
+        CourseStatusUpdateRequest statusRequest = new CourseStatusUpdateRequest(CourseStatus.PUBLISHED);
+
+        when(courseService.updateCourseStatus(courseResponse.id(), CourseStatus.PUBLISHED))
+                .thenReturn(Optional.of(courseResponse));
+
+        mockMvc.perform(patch("/api/v1/courses/{id}/status", courseResponse.id()).with(jwt())
+                .contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(statusRequest)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.id").value(courseResponse.id()));
     }
 }
