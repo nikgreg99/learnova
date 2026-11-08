@@ -1,3 +1,4 @@
+
 package com.learnova.controller;
 
 import com.learnova.dto.error.ApiError;
@@ -23,6 +24,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.PagedModel;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Users", description = "User management operations")
@@ -36,91 +40,129 @@ public class UserController {
         this.userService = userService;
     }
 
-    @Operation(summary = "Create a user", description = "Creates a new user and returns the created resource.")
+    @Operation(summary = "Create a user",
+        description = "Creates a new user and returns the created resource.")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "User created successfully", content = @Content(schema = @Schema(implementation = UserResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid request payload or validation failure", content = @Content(schema = @Schema(implementation = ApiError.class)))
+        @ApiResponse(responseCode = "201", description = "User created successfully",
+            content = @Content(schema = @Schema(implementation = UserResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid request payload or validation failure",
+            content = @Content(schema = @Schema(implementation = ApiError.class)))
     })
     @PostMapping
-    public ResponseEntity<UserResponse> createUser(@Valid
-    @RequestBody UserRequest request) {
-        UserResponse user = userService.createUser(request);
+    public ResponseEntity<UserResponse> createUser(
+        @Valid @RequestBody UserRequest request) {
 
+        UserResponse user = userService.createUser(request);
         URI location = URI.create("/api/v1/users/" + user.id());
 
         return ResponseEntity.created(location).body(user);
     }
 
-    @Operation(summary = "List users", description = "Returns a paginated list of all users, including disabled and deleted accounts.")
+    @Operation(summary = "Get current user profile",
+        description = "Returns the profile of the currently authenticated user.")
     @SecurityRequirement(name = "bearerAuth")
-    @ApiResponse(responseCode = "200", description = "Paginated user list. Use page (zero-based) and size query parameters.")
-    @GetMapping
-    public ResponseEntity<PagedModel<UserResponse>> getUsers(@ParameterObject
-    @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        return ResponseEntity.ok(new PagedModel<>(userService.getUsers(pageable)));
+    @ApiResponse(responseCode = "200", description = "Current user profile retrieved successfully")
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/me")
+    public ResponseEntity<UserResponse> getMyProfile(
+        @AuthenticationPrincipal Jwt jwt) {
+        return ResponseEntity.ok(
+            userService.getMyProfile(jwt.getSubject())
+        );
     }
 
-    @Operation(summary = "Get user by ID", description = "Returns the profile of a user, including disabled and deleted accounts.")
+    @Operation(summary = "Update current user profile",
+        description = "Updates the profile of the currently authenticated user.")
     @SecurityRequirement(name = "bearerAuth")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "User found", content = @Content(schema = @Schema(implementation = UserResponse.class))),
-            @ApiResponse(responseCode = "404", description = "User not found", content = @Content(schema = @Schema(implementation = ApiError.class)))
+        @ApiResponse(responseCode = "200", description = "Profile updated successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+        @ApiResponse(responseCode = "404", description = "User not found",
+            content = @Content(schema = @Schema(implementation = ApiError.class)))
     })
+    @PreAuthorize("isAuthenticated()")
+    @PutMapping("/me")
+    public ResponseEntity<UserResponse> updateMyProfile(
+        @AuthenticationPrincipal Jwt jwt,
+        @Valid @RequestBody UserProfileUpdateRequest request) {
+
+        UserResponse currentUser = userService.getMyProfile(jwt.getSubject());
+
+        return ResponseEntity.ok(
+            userService.updateUserProfile(currentUser.id(), request)
+        );
+    }
+
+    @Operation(summary = "List users",
+        description = "Returns a paginated list of all users, including disabled and deleted accounts.")
+    @SecurityRequirement(name = "bearerAuth")
+    @ApiResponse(responseCode = "200", description = "Paginated user list")
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping
+    public ResponseEntity<PagedModel<UserResponse>> getUsers(
+        @ParameterObject
+        @PageableDefault(size = 20, sort = "createdAt",
+            direction = Sort.Direction.DESC) Pageable pageable) {
+
+        return ResponseEntity.ok(
+            new PagedModel<>(userService.getUsers(pageable))
+        );
+    }
+
+    @Operation(summary = "Get user by ID",
+        description = "Returns the profile of a user, including disabled and deleted accounts.")
+    @SecurityRequirement(name = "bearerAuth")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<UserResponse> getUser(
-            @Parameter(description = "Unique ID of the user", example = "1", required = true)
-            @PathVariable Long id) {
+        @Parameter(description = "Unique ID of the user", example = "1")
+        @PathVariable Long id) {
+
         return ResponseEntity.ok(userService.getUser(id));
     }
 
-    @Operation(summary = "Update a user's profile", description = "Updates the user's name, email and username in Learnova and Keycloak.")
+    @Operation(summary = "Update a user's profile",
+        description = "Updates a user's profile in Learnova and Keycloak.")
     @SecurityRequirement(name = "bearerAuth")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "User profile updated successfully", content = @Content(schema = @Schema(implementation = UserResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid request payload or validation failure", content = @Content(schema = @Schema(implementation = ApiError.class))),
-            @ApiResponse(responseCode = "404", description = "User not found", content = @Content(schema = @Schema(implementation = ApiError.class))),
-            @ApiResponse(responseCode = "409", description = "User has been deleted or email/username is already in use", content = @Content(schema = @Schema(implementation = ApiError.class)))
-    })
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<UserResponse> updateUserProfile(
-            @Parameter(description = "Unique ID of the user to update", example = "1", required = true)
-            @PathVariable Long id,
-            @Valid
-            @RequestBody UserProfileUpdateRequest request) {
-        return ResponseEntity.ok(userService.updateUserProfile(id, request));
+        @PathVariable Long id,
+        @Valid @RequestBody UserProfileUpdateRequest request) {
+
+        return ResponseEntity.ok(
+            userService.updateUserProfile(id, request)
+        );
     }
 
-    @Operation(summary = "Update a user's status", description = "Activates or disables an existing user in Learnova and Keycloak.")
+    @Operation(summary = "Update a user's status",
+        description = "Activates or disables an existing user in Learnova and Keycloak.")
     @SecurityRequirement(name = "bearerAuth")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "User status updated successfully", content = @Content(schema = @Schema(implementation = UserResponse.class))),
-            @ApiResponse(responseCode = "404", description = "User not found", content = @Content(schema = @Schema(implementation = ApiError.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid user status")
-    })
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}/status")
     public ResponseEntity<UserResponse> updateUserStatus(
-            @Parameter(description = "Unique ID of the user to update", example = "1", required = true)
-            @PathVariable Long id,
-            @Valid
-            @RequestBody UserStatusRequest request) {
+        @PathVariable Long id,
+        @Valid @RequestBody UserStatusRequest request) {
+
         UserStatus status = switch (request.status()) {
             case ACTIVE -> UserStatus.ACTIVE;
             case DISABLED -> UserStatus.DISABLED;
         };
-        return ResponseEntity.ok(userService.updateUserStatus(id, status));
+
+        return ResponseEntity.ok(
+            userService.updateUserStatus(id, status)
+        );
     }
 
-    @Operation(summary = "Delete a user", description = "Soft-deletes a user in Learnova and disables their Keycloak account.")
+    @Operation(summary = "Delete a user",
+        description = "Soft-deletes a user in Learnova and disables their Keycloak account.")
     @SecurityRequirement(name = "bearerAuth")
-    @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "User deleted successfully"),
-            @ApiResponse(responseCode = "404", description = "User not found", content = @Content(schema = @Schema(implementation = ApiError.class)))
-    })
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(
-            @Parameter(description = "Unique ID of the user to delete", example = "1", required = true)
-            @PathVariable Long id) {
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+
         userService.deleteUser(id);
+
         return ResponseEntity.noContent().build();
     }
 }
