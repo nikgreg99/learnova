@@ -1,7 +1,9 @@
 package com.learnova.controller;
 
+import com.learnova.dto.course.CoursePatchRequest;
 import com.learnova.dto.course.CourseRequest;
 import com.learnova.dto.course.CourseResponse;
+import com.learnova.dto.course.CourseStatusUpdateRequest;
 import com.learnova.dto.error.ApiError;
 import com.learnova.service.CourseService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -75,6 +77,38 @@ public class CourseController {
             @RequestBody
             @Valid CourseRequest courseRequest) {
         var course = courseService.updateCourse(id, courseRequest);
+        return course.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @Operation(summary = "Partially update an existing course", description = "Updates selected fields of an existing course")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Course partially updated successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload or validation failure", content = @Content(schema = @Schema(implementation = ApiError.class))),
+            @ApiResponse(responseCode = "404", description = "Course not found", content = @Content(schema = @Schema(implementation = ApiError.class)))
+    })
+    @PatchMapping("/{id}")
+    public ResponseEntity<CourseResponse> patchCourse(
+            @Parameter(description = "Unique ID of the course to update", example = "1", required = true)
+            @PathVariable Long id,
+            @RequestBody
+            @Valid CoursePatchRequest patchRequest) {
+        var course = courseService.patchCourse(id, patchRequest);
+        return course.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @Operation(summary = "Update course publication status", description = "Updates the publication status of an existing course")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Course status updated successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload or validation failure", content = @Content(schema = @Schema(implementation = ApiError.class))),
+            @ApiResponse(responseCode = "404", description = "Course not found", content = @Content(schema = @Schema(implementation = ApiError.class)))
+    })
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<CourseResponse> updateCourseStatus(
+            @Parameter(description = "Unique ID of the course to update", example = "1", required = true)
+            @PathVariable Long id,
+            @RequestBody
+            @Valid CourseStatusUpdateRequest statusRequest) {
+        var course = courseService.updateCourseStatus(id, statusRequest.status());
         return course.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 

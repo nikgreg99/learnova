@@ -3,11 +3,13 @@ package com.learnova.service;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import com.learnova.dto.course.CoursePatchRequest;
 import com.learnova.dto.course.CourseRequest;
 import com.learnova.dto.course.CourseResponse;
 import com.learnova.exception.CourseNotFoundException;
 import com.learnova.mapper.CourseMapper;
 import com.learnova.model.Course;
+import com.learnova.model.CourseStatus;
 import com.learnova.repository.CourseRepository;
 import java.math.BigDecimal;
 import java.util.List;
@@ -44,8 +46,8 @@ class CourseServiceTest {
 
         courseRequest = new CourseRequest("Advanced Java", "Advanced Java concepts", new BigDecimal("59.90"));
 
-        courseResponse = new CourseResponse(courseId, courseRequest.name(), courseRequest.description(),
-                courseRequest.price(), null, null);
+        courseResponse = new CourseResponse(courseId, courseRequest.name(), CourseStatus.DRAFT, 1L,
+                courseRequest.description(), courseRequest.price(), null, null);
     }
 
     private Course createCourse(Long id, String name, String description, String price) {
@@ -61,8 +63,8 @@ class CourseServiceTest {
     void shouldReturnCourse() {
         Course secondCourse = createCourse(2L, "Spring Boot Essentials", "Learn Spring Boot", "79.90");
 
-        CourseResponse secondResponse = new CourseResponse(2L, "Spring Boot Essentials", "Learn Spring Boot",
-                new BigDecimal("79.90"), null, null);
+        CourseResponse secondResponse = new CourseResponse(2L, "Spring Boot Essentials", null, courseId,
+                "Learn Spring Boot", new BigDecimal("79.90"), null, null);
 
         when(courseRepository.findAll()).thenReturn(List.of(course, secondCourse));
         when(courseMapper.toResponse(course)).thenReturn(courseResponse);
@@ -183,5 +185,35 @@ class CourseServiceTest {
         verify(courseRepository).findById(courseId);
         verify(courseRepository, never()).save(any(Course.class));
         verifyNoInteractions(courseMapper);
+    }
+
+    @Test
+    void shouldPatchCourseWhenCourseExists() {
+        CoursePatchRequest patchRequest = new CoursePatchRequest("Updated Title", null, null, CourseStatus.PUBLISHED);
+
+        when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+        when(courseRepository.save(course)).thenReturn(course);
+        when(courseMapper.toResponse(course)).thenReturn(courseResponse);
+
+        var result = courseService.patchCourse(courseId, patchRequest);
+
+        assertTrue(result.isPresent());
+        assertEquals(courseResponse, result.get());
+        verify(courseMapper).patchCourse(patchRequest, course);
+        verify(courseRepository).save(course);
+    }
+
+    @Test
+    void shouldUpdateCourseStatusWhenCourseExists() {
+        when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+        when(courseRepository.save(course)).thenReturn(course);
+        when(courseMapper.toResponse(course)).thenReturn(courseResponse);
+
+        var result = courseService.updateCourseStatus(courseId, CourseStatus.PUBLISHED);
+
+        assertTrue(result.isPresent());
+        assertEquals(courseResponse, result.get());
+        assertEquals(CourseStatus.PUBLISHED, course.getStatus());
+        verify(courseRepository).save(course);
     }
 }

@@ -1,9 +1,11 @@
 package com.learnova.service;
 
+import com.learnova.dto.course.CoursePatchRequest;
 import com.learnova.dto.course.CourseRequest;
 import com.learnova.dto.course.CourseResponse;
 import com.learnova.exception.CourseNotFoundException;
 import com.learnova.mapper.CourseMapper;
+import com.learnova.model.CourseStatus;
 import com.learnova.repository.CourseRepository;
 import jakarta.transaction.Transactional;
 import java.util.List;
@@ -38,6 +40,22 @@ public class CourseService {
     public Optional<CourseResponse> updateCourse(Long courseId, CourseRequest courseRequest) {
         return courseRepository.findById(courseId).map(course -> {
             courseMapper.updateCourse(courseRequest, course);
+            var updatedCourse = courseRepository.save(course);
+            return courseMapper.toResponse(updatedCourse);
+        });
+    }
+
+    public Optional<CourseResponse> patchCourse(Long courseId, CoursePatchRequest request) {
+        return courseRepository.findById(courseId).map(course -> {
+            courseMapper.patchCourse(request, course);
+            var updatedCourse = courseRepository.save(course);
+            return courseMapper.toResponse(updatedCourse);
+        });
+    }
+
+    public Optional<CourseResponse> updateCourseStatus(Long courseId, CourseStatus status) {
+        return courseRepository.findById(courseId).map(course -> {
+            course.setStatus(status);
             var updatedCourse = courseRepository.save(course);
             return courseMapper.toResponse(updatedCourse);
         });

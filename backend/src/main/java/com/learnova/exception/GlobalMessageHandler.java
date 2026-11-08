@@ -57,6 +57,26 @@ public class GlobalMessageHandler {
         return buildError(HttpStatus.CONFLICT, message, request);
     }
 
+    @ExceptionHandler(LessonNotFoundException.class)
+    public ResponseEntity<ApiError> handleLessonNotFoundException(LessonNotFoundException ex,
+            HttpServletRequest request) {
+        String message = messageSource.getMessage("lesson.not-found", new Object[]{
+                ex.getLessonId()
+        }, request.getLocale());
+
+        return buildError(HttpStatus.NOT_FOUND, message, request);
+    }
+
+    @ExceptionHandler(LessonPositionConflictException.class)
+    public ResponseEntity<ApiError> handleLessonPositionConflictException(LessonPositionConflictException ex,
+            HttpServletRequest request) {
+        String message = messageSource.getMessage("lesson.position-conflict", new Object[]{
+                ex.getPosition()
+        }, request.getLocale());
+
+        return buildError(HttpStatus.CONFLICT, message, request);
+    }
+
     private ResponseEntity<ApiError> buildError(HttpStatus httpStatus, String message, HttpServletRequest request) {
 
         ApiError error = new ApiError(Instant.now(), httpStatus.value(), httpStatus.getReasonPhrase(), message,
