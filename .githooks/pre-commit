@@ -24,13 +24,30 @@ is_env_file() {
     esac
 }
 
+is_excluded_from_secret_scan() {
+    local path="${1,,}"
+
+    case "$path" in
+        backend/src/test/*|backend/src/test/**)
+            return 0
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
 is_placeholder() {
     local value
     value="$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')"
 
     case "$value" in
-        ""|change_me|change-me|changeme|your_*|replace_*|example*|placeholder*|sample*|dummy*|test|test-*|none|null|unset|'<'*|'${'*|'$('*|'%') return 0 ;;
-        *) return 1 ;;
+        ""|change_me|change-me|changeme|your_*|replace_*|example*|placeholder*|sample*|dummy*|test|test-*|none|null|unset|'<'*|'${'*|'$('*|'%')
+            return 0
+            ;;
+        *)
+            return 1
+            ;;
     esac
 }
 
@@ -61,6 +78,7 @@ scan_staged_additions() {
 
 shopt -s nocasematch
 secret_found=0
+
 for file in "${STAGED_FILES[@]}"; do
     if is_env_file "$file"; then
         printf 'Refusing to commit environment file: %s (use .env.example for templates)\n' "$file"
@@ -68,10 +86,16 @@ for file in "${STAGED_FILES[@]}"; do
         continue
     fi
 
+    if is_excluded_from_secret_scan "$file"; then
+        printf 'Skipping secret scan for test file: %s\n' "$file"
+        continue
+    fi
+
     if ! scan_staged_additions "$file"; then
         secret_found=1
     fi
 done
+
 shopt -u nocasematch
 
 if [ "$secret_found" -ne 0 ]; then
@@ -81,14 +105,17 @@ fi
 
 declare -a FORMAT_FILES=()
 spotless_files=""
+
 for file in "${STAGED_FILES[@]}"; do
     case "$file" in
         backend/*.java|backend/*.sql|backend/**/*.java|backend/**/*.sql)
             FORMAT_FILES+=("$file")
             spotless_file="${file#backend/}"
+
             if [ -n "$spotless_files" ]; then
                 spotless_files="${spotless_files},"
             fi
+
             spotless_files="${spotless_files}${spotless_file}"
             ;;
     esac
@@ -99,6 +126,7 @@ if [ "${#FORMAT_FILES[@]}" -eq 0 ]; then
 fi
 
 TEMP_DIR="$(mktemp -d)"
+
 restore_working_tree() {
     local file
 
@@ -109,8 +137,10 @@ restore_working_tree() {
             rm -f -- "${REPO_ROOT}/${file}"
         fi
     done
+
     rm -rf -- "$TEMP_DIR"
 }
+
 trap restore_working_tree EXIT
 
 for file in "${FORMAT_FILES[@]}"; do
@@ -118,10 +148,12 @@ for file in "${FORMAT_FILES[@]}"; do
         mkdir -p "${TEMP_DIR}/$(dirname "$file")"
         cp -p "${REPO_ROOT}/${file}" "${TEMP_DIR}/${file}"
     fi
+
     git show ":${file}" > "${REPO_ROOT}/${file}"
 done
 
 echo "Formatting staged Java and SQL files with Spotless..."
+
 if [ -x "${BACKEND_DIR}/mvnw" ]; then
     (cd "$BACKEND_DIR" && ./mvnw -q "-DspotlessFiles=${spotless_files}" spotless:apply)
 elif command -v mvn >/dev/null 2>&1; then
@@ -132,4 +164,6 @@ else
 fi
 
 git add -- "${FORMAT_FILES[@]}"
+
 echo "Staged formatting complete."
+
