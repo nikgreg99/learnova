@@ -67,7 +67,7 @@ public class CourseController {
         )
     })
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('STUDENT', 'INSTRUCTOR', 'ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or @courseSecurityService.canView(#id)")
     public ResponseEntity<CourseResponse> getCourse(
         @Parameter(
             description = "Unique ID of the course",

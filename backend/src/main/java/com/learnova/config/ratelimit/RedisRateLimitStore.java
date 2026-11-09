@@ -3,9 +3,11 @@ package com.learnova.config.ratelimit;
 import java.time.Duration;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 
+@Slf4j
 @RequiredArgsConstructor
 public class RedisRateLimitStore implements RateLimitStore {
 
@@ -29,12 +31,17 @@ public class RedisRateLimitStore implements RateLimitStore {
             throw new IllegalArgumentException("Rate limit and window must be positive.");
         }
 
-        long retryAfterMillis = redisTemplate.execute(CONSUME_SCRIPT, List.of(KEY_PREFIX + key),
-                Long.toString(window.toMillis()), Integer.toString(limit));
-        if (retryAfterMillis <= 0) {
+        try {
+            Long retryAfterMillis = redisTemplate.execute(CONSUME_SCRIPT, List.of(KEY_PREFIX + key),
+                    Long.toString(window.toMillis()), Integer.toString(limit));
+            if (retryAfterMillis == null || retryAfterMillis <= 0) {
+                return RateLimitDecision.permit();
+            }
+
+            return RateLimitDecision.reject((retryAfterMillis + 999) / 1000);
+        } catch (Exception ex) {
+            log.warn("Redis rate limiter unavailable, failing open: {}", ex.getMessage());
             return RateLimitDecision.permit();
         }
-
-        return RateLimitDecision.reject((retryAfterMillis + 999) / 1000);
     }
 }

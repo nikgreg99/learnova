@@ -76,6 +76,9 @@ class CourseControllerTest {
         when(courseSecurityService.isOwner(anyLong()))
             .thenReturn(true);
 
+        when(courseSecurityService.canView(anyLong()))
+            .thenReturn(true);
+
         courseRequest = new CourseRequest(
             "Java Fundamentals",
             "Introduction to Java",

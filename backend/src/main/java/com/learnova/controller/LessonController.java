@@ -54,7 +54,7 @@ public class LessonController {
             content = @Content(schema = @Schema(implementation = ApiError.class))
         )
     })
-    @PreAuthorize("hasAnyRole('STUDENT', 'INSTRUCTOR', 'ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or @courseSecurityService.canView(#courseId)")
     @GetMapping
     public ResponseEntity<List<LessonResponse>> getLessons(
         @Parameter(description = "Unique ID of the course", example = "1", required = true)
@@ -75,7 +75,7 @@ public class LessonController {
             content = @Content(schema = @Schema(implementation = ApiError.class))
         )
     })
-    @PreAuthorize("hasAnyRole('STUDENT', 'INSTRUCTOR', 'ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or @courseSecurityService.canView(#courseId)")
     @GetMapping("/{lessonId}")
     public ResponseEntity<LessonResponse> getLesson(
         @Parameter(description = "Unique ID of the course", example = "1", required = true)

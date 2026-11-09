@@ -2,8 +2,8 @@ package com.learnova.service.security;
 
 import com.learnova.config.security.SecurityUtils;
 import com.learnova.model.Course;
+import com.learnova.model.CourseStatus;
 import com.learnova.repository.CourseRepository;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
@@ -38,6 +38,36 @@ public class CourseSecurityService {
             .map(instructor ->
                 instructor.getKeycloakId().equals(keycloakId))
             .orElse(false);
+    }
+
+    public boolean canView(Long courseId) {
+        Authentication authentication =
+            SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return false;
+        }
+
+        if (authentication.getAuthorities().stream()
+            .anyMatch(authority ->
+                authority.getAuthority().equals("ROLE_ADMIN"))) {
+            return true;
+        }
+
+        return courseRepository.findById(courseId)
+            .map(course -> {
+                if (course.getStatus() == CourseStatus.PUBLISHED) {
+                    return true;
+                }
+                if (course.getInstructor() != null && authentication.getAuthorities().stream()
+                    .anyMatch(authority ->
+                        authority.getAuthority().equals("ROLE_INSTRUCTOR"))) {
+                    String keycloakId = SecurityUtils.getCurrentKeycloakId();
+                    return course.getInstructor().getKeycloakId().equals(keycloakId);
+                }
+                return false;
+            })
+            .orElse(true);
     }
 
     public void verifyOwnership(Long courseId) {

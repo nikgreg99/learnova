@@ -2,6 +2,7 @@
 package com.learnova.service.security;
 
 import com.learnova.model.Course;
+import com.learnova.model.CourseStatus;
 import com.learnova.model.User;
 import com.learnova.repository.CourseRepository;
 
@@ -231,5 +232,89 @@ class CourseSecurityServiceTest {
             AccessDeniedException.class,
             () -> courseSecurityService.verifyOwnership(COURSE_ID)
         );
+    }
+
+    @Test
+    void canViewShouldReturnTrueWhenUserIsAdmin() {
+        authenticate("ADMIN", OTHER_KEYCLOAK_ID);
+
+        assertTrue(courseSecurityService.canView(COURSE_ID));
+        verify(courseRepository, never()).findById(COURSE_ID);
+    }
+
+    @Test
+    void canViewShouldReturnTrueWhenCourseIsPublishedForStudent() {
+        authenticate("STUDENT", "student-keycloak-id");
+
+        Course course = new Course();
+        course.setId(COURSE_ID);
+        course.setStatus(CourseStatus.PUBLISHED);
+
+        when(courseRepository.findById(COURSE_ID)).thenReturn(Optional.of(course));
+
+        assertTrue(courseSecurityService.canView(COURSE_ID));
+    }
+
+    @Test
+    void canViewShouldReturnFalseWhenCourseIsDraftForStudent() {
+        authenticate("STUDENT", "student-keycloak-id");
+
+        Course course = new Course();
+        course.setId(COURSE_ID);
+        course.setStatus(CourseStatus.DRAFT);
+
+        when(courseRepository.findById(COURSE_ID)).thenReturn(Optional.of(course));
+
+        assertFalse(courseSecurityService.canView(COURSE_ID));
+    }
+
+    @Test
+    void canViewShouldReturnTrueWhenCourseIsDraftForOwnerInstructor() {
+        authenticate("INSTRUCTOR", KEYCLOAK_ID);
+
+        User instructor = new User();
+        instructor.setKeycloakId(KEYCLOAK_ID);
+
+        Course course = new Course();
+        course.setId(COURSE_ID);
+        course.setStatus(CourseStatus.DRAFT);
+        course.setInstructor(instructor);
+
+        when(courseRepository.findById(COURSE_ID)).thenReturn(Optional.of(course));
+
+        assertTrue(courseSecurityService.canView(COURSE_ID));
+    }
+
+    @Test
+    void canViewShouldReturnFalseWhenCourseIsDraftForOtherInstructor() {
+        authenticate("INSTRUCTOR", OTHER_KEYCLOAK_ID);
+
+        User instructor = new User();
+        instructor.setKeycloakId(KEYCLOAK_ID);
+
+        Course course = new Course();
+        course.setId(COURSE_ID);
+        course.setStatus(CourseStatus.DRAFT);
+        course.setInstructor(instructor);
+
+        when(courseRepository.findById(COURSE_ID)).thenReturn(Optional.of(course));
+
+        assertFalse(courseSecurityService.canView(COURSE_ID));
+    }
+
+    @Test
+    void canViewShouldReturnTrueWhenCourseDoesNotExist() {
+        authenticate("STUDENT", "student-keycloak-id");
+
+        when(courseRepository.findById(COURSE_ID)).thenReturn(Optional.empty());
+
+        assertTrue(courseSecurityService.canView(COURSE_ID));
+    }
+
+    @Test
+    void canViewShouldReturnFalseWhenUserIsNotAuthenticated() {
+        SecurityContextHolder.clearContext();
+
+        assertFalse(courseSecurityService.canView(COURSE_ID));
     }
 }
