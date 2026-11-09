@@ -1,7 +1,9 @@
 package com.learnova.config.ratelimit;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -10,9 +12,10 @@ import static org.mockito.Mockito.when;
 import java.time.Duration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
 import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.data.redis.core.script.RedisScript;
 
 class RedisRateLimitStoreTest {
 
@@ -27,7 +30,7 @@ class RedisRateLimitStoreTest {
 
     @Test
     void consume_shouldPermitWhenRetryAfterIsZero() {
-        when(redisTemplate.execute(any(DefaultRedisScript.class), anyList(), eq("60000"), eq("10")))
+        when(redisTemplate.execute(ArgumentMatchers.<RedisScript<Long>>any(), anyList(), eq("60000"), eq("10")))
                 .thenReturn(0L);
 
         RateLimitDecision decision = store.consume("test-key", 10, Duration.ofMinutes(1));
@@ -38,7 +41,7 @@ class RedisRateLimitStoreTest {
 
     @Test
     void consume_shouldRejectWhenLimitIsExceeded() {
-        when(redisTemplate.execute(any(DefaultRedisScript.class), anyList(), eq("60000"), eq("10")))
+        when(redisTemplate.execute(ArgumentMatchers.<RedisScript<Long>>any(), anyList(), eq("60000"), eq("10")))
                 .thenReturn(15000L);
 
         RateLimitDecision decision = store.consume("test-key", 10, Duration.ofMinutes(1));
@@ -49,7 +52,7 @@ class RedisRateLimitStoreTest {
 
     @Test
     void consume_shouldFailOpenWhenRedisThrowsException() {
-        when(redisTemplate.execute(any(DefaultRedisScript.class), anyList(), eq("60000"), eq("10")))
+        when(redisTemplate.execute(ArgumentMatchers.<RedisScript<Long>>any(), anyList(), eq("60000"), eq("10")))
                 .thenThrow(new RedisConnectionFailureException("Connection refused"));
 
         RateLimitDecision decision = store.consume("test-key", 10, Duration.ofMinutes(1));
