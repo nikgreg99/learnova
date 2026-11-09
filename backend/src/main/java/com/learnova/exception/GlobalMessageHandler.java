@@ -77,6 +77,16 @@ public class GlobalMessageHandler {
         return buildError(HttpStatus.CONFLICT, message, request);
     }
 
+    @ExceptionHandler(KeycloakUserNotFoundException.class)
+    public ResponseEntity<ApiError> handleKeycloakUserNotFoundException(KeycloakUserNotFoundException ex,
+                                                                          HttpServletRequest request) {
+        String message = messageSource.getMessage("user.keycloak-not-found", new Object[]{
+            ex.getKeycloakId()
+        }, request.getLocale());
+
+        return buildError(HttpStatus.CONFLICT, message, request);
+    }
+
     private ResponseEntity<ApiError> buildError(HttpStatus httpStatus, String message, HttpServletRequest request) {
 
         ApiError error = new ApiError(Instant.now(), httpStatus.value(), httpStatus.getReasonPhrase(), message,

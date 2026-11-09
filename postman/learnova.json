@@ -1,507 +1,742 @@
 {
-  "info": {
-    "_postman_id": "551c3e61-a411-4a74-a566-b760d94d610a",
-    "name": "Learnova LMS API",
-    "description": "Learnova REST API collection. Protected requests inherit the collection OAuth 2.0 Authorization Code + PKCE (S256) settings. Select Get New Access Token and Use Token in Postman. Local test account: test-student.",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_exporter_id": "12861475"
-  },
-  "item": [
-    {
-      "name": "Authentication",
-      "item": [
-        {
-          "name": "Get current user",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/auth/me",
-              "protocol": "{{proto}}",
-              "host": [
-                "{{host}}"
-              ],
-              "port": "{{port}}",
-              "path": [
-                "api",
-                "{{version}}",
-                "auth",
-                "me"
-              ]
-            },
-            "description": "Restituisce il profilo associato al JWT di accesso ricevuto da Keycloak."
-          },
-          "response": []
-        }
-      ],
-      "description": "Autenticazione e profilo utente.\n\nEndpoint inclusi:\n- GET /api/{{version}}/auth/me - restituisce il profilo associato al token Keycloak.\n\nRichiede autenticazione tramite la configurazione OAuth 2.0 della collection. Account di test locale: {{testAccountName}}."
+    "info": {
+        "_postman_id": "551c3e61-a411-4a74-a566-b760d94d610a",
+        "name": "Learnova LMS API",
+        "description": "Learnova REST API collection. Protected requests inherit the collection-level OAuth 2.0 Authorization Code flow with PKCE (S256). Select Get New Access Token and then Use Token. Use a Keycloak test account with the role required by the request. Public registration assigns STUDENT automatically; privileged roles must only be assigned by an administrator.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+        "_exporter_id": "12861475"
     },
-    {
-      "name": "Users",
-      "item": [
+    "item": [
         {
-          "name": "Create user",
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"firstName\": \"{{userFirstName}}\",\n  \"lastName\": \"{{userLastName}}\",\n  \"email\": \"{{userEmail}}\",\n  \"username\": \"{{userUsername}}\",\n  \"password\": \"{{userPassword}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
+            "name": "Authentication",
+            "item": [
+                {
+                    "name": "Get current user",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/auth/me",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "auth",
+                                "me"
+                            ]
+                        },
+                        "description": "Returns the profile associated with the authenticated Keycloak access token."
+                    },
+                    "response": []
                 }
-              }
-            },
-            "url": {
-              "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/users",
-              "protocol": "{{proto}}",
-              "host": [
-                "{{host}}"
-              ],
-              "port": "{{port}}",
-              "path": [
-                "api",
-                "{{version}}",
-                "users"
-              ]
-            },
-            "description": "Endpoint pubblico di registrazione. Omette roles così il servizio assegna il ruolo STUDENT predefinito."
-          },
-          "response": []
+            ],
+            "description": "Authentication and current-user information.\n\nProtected requests use the collection-level OAuth 2.0 Authorization Code flow with PKCE (S256). In Postman, select Get New Access Token and then Use Token. Choose the matching Keycloak test account in the browser login page before requesting a token."
         },
         {
-          "name": "List users",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/users?page=0&size=20",
-              "protocol": "{{proto}}",
-              "host": [
-                "{{host}}"
-              ],
-              "port": "{{port}}",
-              "path": [
-                "api",
-                "{{version}}",
-                "users"
-              ],
-              "query": [
+            "name": "Users",
+            "item": [
                 {
-                  "key": "page",
-                  "value": "0"
+                    "name": "Create user (public registration)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"firstName\": \"{{userFirstName}}\",\n  \"lastName\": \"{{userLastName}}\",\n  \"email\": \"{{userEmail}}\",\n  \"username\": \"{{userUsername}}\",\n  \"password\": \"{{userPassword}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/users",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "users"
+                            ]
+                        },
+                        "description": "Creates a new Learnova account. This endpoint is public and must assign the STUDENT role server-side. The request intentionally does not accept a roles property."
+                    },
+                    "response": []
                 },
                 {
-                  "key": "size",
-                  "value": "20"
+                    "name": "List users",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/users?page=0&size=20",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "users"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "size",
+                                    "value": "20"
+                                }
+                            ]
+                        },
+                        "description": "Returns a paginated list of users, including disabled and soft-deleted accounts. Requires an authenticated account with the appropriate administrative permissions."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get user by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/users/{{userId}}",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "users",
+                                "{{userId}}"
+                            ]
+                        },
+                        "description": "Returns the user identified by the supplied ID, including disabled or soft-deleted accounts."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update user profile",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"firstName\": \"{{userFirstName}}\",\n  \"lastName\": \"{{userLastName}}\",\n  \"email\": \"{{userEmail}}\",\n  \"username\": \"{{userUsername}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/users/{{userId}}",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "users",
+                                "{{userId}}"
+                            ]
+                        },
+                        "description": "Updates the user's first name, last name, email address, and username in Learnova and Keycloak."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update user status",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"status\": \"DISABLED\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/users/{{userId}}/status",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "users",
+                                "{{userId}}",
+                                "status"
+                            ]
+                        },
+                        "description": "Changes the user's status. Use ACTIVE to enable the account or DISABLED to disable it."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Soft delete user",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/users/{{userId}}",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "users",
+                                "{{userId}}"
+                            ]
+                        },
+                        "description": "Marks the user as DELETED without physically removing the database record and disables the corresponding Keycloak account."
+                    },
+                    "response": []
                 }
-              ]
-            },
-            "description": "Elenca gli utenti a pagine di 20, dal più recente. Include account disabilitati ed eliminati."
-          },
-          "response": []
-        },
-        {
-          "name": "Get user by ID",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/users/{{userId}}",
-              "protocol": "{{proto}}",
-              "host": [
-                "{{host}}"
-              ],
-              "port": "{{port}}",
-              "path": [
-                "api",
-                "{{version}}",
-                "users",
-                "{{userId}}"
-              ]
-            },
-            "description": "Recupera il profilo dell'utente indicato, inclusi account disabilitati ed eliminati."
-          },
-          "response": []
-        },
-        {
-          "name": "Update user profile",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"firstName\": \"{{userFirstName}}\",\n  \"lastName\": \"{{userLastName}}\",\n  \"email\": \"{{userEmail}}\",\n  \"username\": \"{{userUsername}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/users/{{userId}}",
-              "protocol": "{{proto}}",
-              "host": [
-                "{{host}}"
-              ],
-              "port": "{{port}}",
-              "path": [
-                "api",
-                "{{version}}",
-                "users",
-                "{{userId}}"
-              ]
-            },
-            "description": "Aggiorna nome, cognome, email e username in Learnova e Keycloak. Richiede un JWT valido."
-          },
-          "response": []
+            "description": "Public registration and user administration.\n\nPublic registration must assign STUDENT on the server side. Role assignment must be restricted to administrator-only functionality; do not expose privileged role selection on the public registration endpoint."
         },
         {
-          "name": "Update user status",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+            "name": "Courses",
+            "item": [
+                {
+                    "name": "Get courses",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/courses",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "courses"
+                            ]
+                        },
+                        "description": "Returns the available courses."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get course by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/courses/{{courseId}}",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "courses",
+                                "{{courseId}}"
+                            ]
+                        },
+                        "description": "Returns the course identified by the supplied ID."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create course",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"{{courseName}}\",\n  \"description\": \"{{courseDescription}}\",\n  \"price\": \"{{coursePrice}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/courses",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "courses"
+                            ]
+                        },
+                        "description": "Creates a course. Requires INSTRUCTOR or ADMIN privileges."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update course",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"{{courseName}}\",\n  \"description\": \"{{courseDescription}}\",\n  \"price\": \"{{coursePrice}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/courses/{{courseId}}",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "courses",
+                                "{{courseId}}"
+                            ]
+                        },
+                        "description": "Replaces the course data. Requires the course owner or an ADMIN account."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete course",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/courses/{{courseId}}",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "courses",
+                                "{{courseId}}"
+                            ]
+                        },
+                        "description": "Deletes the specified course. Requires the course owner or an ADMIN account."
+                    },
+                    "response": []
+                }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"status\": \"DISABLED\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/users/{{userId}}/status",
-              "protocol": "{{proto}}",
-              "host": [
-                "{{host}}"
-              ],
-              "port": "{{port}}",
-              "path": [
-                "api",
-                "{{version}}",
-                "users",
-                "{{userId}}",
-                "status"
-              ]
-            },
-            "description": "Invia status ACTIVE per abilitare oppure DISABLED per disabilitare l'utente."
-          },
-          "response": []
+            "description": "Course catalog and course management.\n\nReading courses requires authentication. Creating courses requires INSTRUCTOR or ADMIN privileges. Updating and deleting courses require course ownership or ADMIN privileges."
         },
         {
-          "name": "Soft delete user",
-          "request": {
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/users/{{userId}}",
-              "protocol": "{{proto}}",
-              "host": [
-                "{{host}}"
-              ],
-              "port": "{{port}}",
-              "path": [
-                "api",
-                "{{version}}",
-                "users",
-                "{{userId}}"
-              ]
-            },
-            "description": "Imposta lo stato DELETED senza eliminare fisicamente il record. Richiede un JWT valido."
-          },
-          "response": []
+            "name": "Lessons",
+            "item": [
+                {
+                    "name": "Get lessons",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/courses/{{courseId}}/lessons",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "courses",
+                                "{{courseId}}",
+                                "lessons"
+                            ]
+                        },
+                        "description": "Returns all lessons belonging to the specified course."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get lesson by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/courses/{{courseId}}/lessons/{{lessonId}}",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "courses",
+                                "{{courseId}}",
+                                "lessons",
+                                "{{lessonId}}"
+                            ]
+                        },
+                        "description": "Returns the specified lesson belonging to the selected course."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create lesson",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"title\": \"{{lessonTitle}}\",\n  \"description\": \"{{lessonDescription}}\",\n  \"content\": \"{{lessonContent}}\",\n  \"position\": 1,\n  \"duration\": 15\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/courses/{{courseId}}/lessons",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "courses",
+                                "{{courseId}}",
+                                "lessons"
+                            ]
+                        },
+                        "description": "Creates a lesson in the selected course. The position is 1-based and must be greater than or equal to 1. Duration is expressed in minutes and must be zero or greater. Requires course ownership or ADMIN privileges."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update lesson",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"title\": \"{{lessonTitle}}\",\n  \"description\": \"{{lessonDescription}}\",\n  \"content\": \"{{lessonContent}}\",\n  \"position\": 1,\n  \"duration\": 20\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/courses/{{courseId}}/lessons/{{lessonId}}",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "courses",
+                                "{{courseId}}",
+                                "lessons",
+                                "{{lessonId}}"
+                            ]
+                        },
+                        "description": "Replaces all lesson fields. Title is required; position must be at least 1; duration must be zero or greater. Requires course ownership or ADMIN privileges."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Partially update lesson",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"title\": \"Dependency Injection\",\n  \"description\": \"Overview of inversion of control and dependency injection\",\n  \"content\": \"# Dependency Injection\\n\\nLesson content goes here.\",\n  \"position\": 2,\n  \"duration\": 25\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/courses/{{courseId}}/lessons/{{lessonId}}",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "courses",
+                                "{{courseId}}",
+                                "lessons",
+                                "{{lessonId}}"
+                            ]
+                        },
+                        "description": "Updates only the supplied fields. Omitted or null fields are left unchanged according to the API implementation. If provided, position must be greater than zero and duration must be zero or greater. Requires course ownership or ADMIN privileges."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete lesson",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/courses/{{courseId}}/lessons/{{lessonId}}",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "courses",
+                                "{{courseId}}",
+                                "lessons",
+                                "{{lessonId}}"
+                            ]
+                        },
+                        "description": "Deletes the specified lesson. Requires course ownership or ADMIN privileges."
+                    },
+                    "response": []
+                }
+            ],
+            "description": "Lesson management for a specific course.\n\nReading lessons requires authentication and an authorized role. Creating, updating, partially updating, and deleting lessons require ownership of the parent course or ADMIN privileges."
         }
-      ],
-      "description": "Registrazione e gestione degli utenti.\n\nEndpoint inclusi:\n- POST /api/{{version}}/users - crea un utente; endpoint pubblico, assegna STUDENT se roles è omesso.\n- GET /api/{{version}}/users?page=0&size=20 - elenca gli utenti paginati, inclusi account disabilitati ed eliminati.\n- GET /api/{{version}}/users/{{userId}} - recupera un utente per ID.\n- PUT /api/{{version}}/users/{{userId}} - aggiorna nome, cognome, email e username in Learnova e Keycloak.\n- PATCH /api/{{version}}/users/{{userId}}/status - abilita (status ACTIVE) o disabilita (status DISABLED) l'utente in Learnova e Keycloak.\n- DELETE /api/{{version}}/users/{{userId}} - imposta DELETED in Learnova e disabilita l'account Keycloak (soft delete).\n\nLe operazioni diverse dalla registrazione richiedono autenticazione."
+    ],
+    "auth": {
+        "type": "oauth2",
+        "oauth2": [
+            {
+                "key": "clientId",
+                "value": "{{keycloakClientName}}",
+                "type": "string"
+            },
+            {
+                "key": "accessTokenUrl",
+                "value": "{{keycloakProto}}://{{keycloakHost}}:{{keycloakPort}}/realms/{{keycloakRealm}}/protocol/openid-connect/token",
+                "type": "string"
+            },
+            {
+                "key": "authUrl",
+                "value": "{{keycloakProto}}://{{keycloakHost}}:{{keycloakPort}}/realms/{{keycloakRealm}}/protocol/openid-connect/auth",
+                "type": "string"
+            },
+            {
+                "key": "addTokenTo",
+                "value": "header",
+                "type": "string"
+            },
+            {
+                "key": "scope",
+                "value": "openid profile email",
+                "type": "string"
+            },
+            {
+                "key": "grant_type",
+                "value": "authorization_code_with_pkce",
+                "type": "string"
+            },
+            {
+                "key": "redirect_uri",
+                "value": "https://oauth.pstmn.io/v1/callback",
+                "type": "string"
+            }
+        ]
     },
-    {
-      "name": "Courses",
-      "item": [
+    "variable": [
         {
-          "name": "Get courses",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/courses",
-              "protocol": "{{proto}}",
-              "host": [
-                "{{host}}"
-              ],
-              "port": "{{port}}",
-              "path": [
-                "api",
-                "{{version}}",
-                "courses"
-              ]
-            }
-          },
-          "response": []
+            "key": "proto",
+            "value": "http"
         },
         {
-          "name": "Get course by ID",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/courses/{{courseId}}",
-              "protocol": "{{proto}}",
-              "host": [
-                "{{host}}"
-              ],
-              "port": "{{port}}",
-              "path": [
-                "api",
-                "{{version}}",
-                "courses",
-                "{{courseId}}"
-              ]
-            }
-          },
-          "response": []
+            "key": "host",
+            "value": "localhost"
         },
         {
-          "name": "Create course",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"{{courseName}}\",\n  \"description\": \"{{courseDescription}}\",\n  \"price\": {{coursePrice}}\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/courses",
-              "protocol": "{{proto}}",
-              "host": [
-                "{{host}}"
-              ],
-              "port": "{{port}}",
-              "path": [
-                "api",
-                "{{version}}",
-                "courses"
-              ]
-            }
-          },
-          "response": []
+            "key": "port",
+            "value": "8080"
         },
         {
-          "name": "Update course",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"{{courseName}}\",\n  \"description\": \"{{courseDescription}}\",\n  \"price\": {{coursePrice}}\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/courses/{{courseId}}",
-              "protocol": "{{proto}}",
-              "host": [
-                "{{host}}"
-              ],
-              "port": "{{port}}",
-              "path": [
-                "api",
-                "{{version}}",
-                "courses",
-                "{{courseId}}"
-              ]
-            }
-          },
-          "response": []
+            "key": "version",
+            "value": "v1"
         },
         {
-          "name": "Delete course",
-          "request": {
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/courses/{{courseId}}",
-              "protocol": "{{proto}}",
-              "host": [
-                "{{host}}"
-              ],
-              "port": "{{port}}",
-              "path": [
-                "api",
-                "{{version}}",
-                "courses",
-                "{{courseId}}"
-              ]
-            }
-          },
-          "response": []
+            "key": "keycloakProto",
+            "value": "http"
+        },
+        {
+            "key": "keycloakHost",
+            "value": "localhost"
+        },
+        {
+            "key": "keycloakPort",
+            "value": "8081"
+        },
+        {
+            "key": "keycloakRealm",
+            "value": "learnova"
+        },
+        {
+            "key": "keycloakClientName",
+            "value": "learnova-postman"
+        },
+        {
+            "key": "courseId",
+            "value": "1"
+        },
+        {
+            "key": "lessonId",
+            "value": "1"
+        },
+        {
+            "key": "userId",
+            "value": "1"
+        },
+        {
+            "key": "courseName",
+            "value": "Spring Boot Essentials"
+        },
+        {
+            "key": "courseDescription",
+            "value": "Build REST APIs with Spring Boot"
+        },
+        {
+            "key": "coursePrice",
+            "value": "79.90"
+        },
+        {
+            "key": "lessonTitle",
+            "value": "Introduction to Spring Boot"
+        },
+        {
+            "key": "lessonDescription",
+            "value": "Overview of Spring Boot architecture"
+        },
+        {
+            "key": "lessonContent",
+            "value": "Spring Boot simplifies the development of Java applications."
+        },
+        {
+            "key": "userFirstName",
+            "value": "Mario"
+        },
+        {
+            "key": "userLastName",
+            "value": "Rossi"
+        },
+        {
+            "key": "userEmail",
+            "value": "mario.rossi@example.com"
+        },
+        {
+            "key": "userUsername",
+            "value": "mrossi"
+        },
+        {
+            "key": "userPassword",
+            "value": ""
+        },
+        {
+            "key": "testStudentUsername",
+            "value": "test-student"
+        },
+        {
+            "key": "testInstructorUsername",
+            "value": "test-instructor"
+        },
+        {
+            "key": "testAdminUsername",
+            "value": "learnova-admin"
         }
-      ],
-      "description": "Lettura e gestione del catalogo corsi.\n\nEndpoint inclusi:\n- GET /api/{{version}}/courses - elenca i corsi.\n- GET /api/{{version}}/courses/{{courseId}} - recupera un corso.\n- POST /api/{{version}}/courses - crea un corso.\n- PUT /api/{{version}}/courses/{{courseId}} - aggiorna un corso.\n- DELETE /api/{{version}}/courses/{{courseId}} - elimina un corso.\n\nTutti gli endpoint richiedono l'autenticazione della collection."
-    }
-  ],
-  "auth": {
-    "type": "oauth2",
-    "oauth2": [
-      {
-        "key": "clientId",
-        "value": "{{keycloakClientName}}",
-        "type": "string"
-      },
-      {
-        "key": "accessTokenUrl",
-        "value": "{{keycloakProto}}://{{keycloakHost}}:{{keycloakPort}}/realms/{{keycloakRealm}}/protocol/openid-connect/token",
-        "type": "string"
-      },
-      {
-        "key": "authUrl",
-        "value": "{{keycloakProto}}://{{keycloakHost}}:{{keycloakPort}}/realms/{{keycloakRealm}}/protocol/openid-connect/auth",
-        "type": "string"
-      },
-      {
-        "key": "addTokenTo",
-        "value": "header",
-        "type": "string"
-      },
-      {
-        "key": "scope",
-        "value": "openid profile email",
-        "type": "string"
-      },
-      {
-        "key": "grant_type",
-        "value": "authorization_code_with_pkce",
-        "type": "string"
-      },
-      {
-        "key": "redirect_uri",
-        "value": "https://oauth.pstmn.io/v1/callback",
-        "type": "string"
-      }
     ]
-  },
-  "variable": [
-    {
-      "key": "proto",
-      "value": "http"
-    },
-    {
-      "key": "host",
-      "value": "localhost"
-    },
-    {
-      "key": "port",
-      "value": "8080"
-    },
-    {
-      "key": "version",
-      "value": "v1"
-    },
-    {
-      "key": "keycloakProto",
-      "value": "http"
-    },
-    {
-      "key": "keycloakHost",
-      "value": "localhost"
-    },
-    {
-      "key": "keycloakPort",
-      "value": "8081"
-    },
-    {
-      "key": "keycloakRealm",
-      "value": "learnova"
-    },
-    {
-      "key": "keycloakClientName",
-      "value": "learnova-postman"
-    },
-    {
-      "key": "courseId",
-      "value": "1"
-    },
-    {
-      "key": "userId",
-      "value": "1"
-    },
-    {
-      "key": "courseName",
-      "value": ""
-    },
-    {
-      "key": "courseDescription",
-      "value": ""
-    },
-    {
-      "key": "coursePrice",
-      "value": ""
-    },
-    {
-      "key": "userFirstName",
-      "value": "Mario"
-    },
-    {
-      "key": "userLastName",
-      "value": "Rossi"
-    },
-    {
-      "key": "userEmail",
-      "value": "mario.rossi@example.com"
-    },
-    {
-      "key": "userUsername",
-      "value": "mrossi"
-    },
-    {
-      "key": "testAccountName",
-      "value": "test-student"
-    },
-    {
-      "key": "userPassword",
-      "value": ""
-    }
-  ]
 }

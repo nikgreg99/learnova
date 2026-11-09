@@ -4,6 +4,7 @@ package com.learnova.service;
 import com.learnova.dto.user.UserProfileUpdateRequest;
 import com.learnova.dto.user.UserRequest;
 import com.learnova.dto.user.UserResponse;
+import com.learnova.exception.KeycloakUserNotFoundException;
 import com.learnova.exception.UserDeletedException;
 import com.learnova.exception.UserNotFoundException;
 import com.learnova.exception.UserProfileConflictException;
@@ -117,4 +118,11 @@ public class UserService {
         user.setStatus(UserStatus.DELETED);
     }
 
+    @Transactional(readOnly = true)
+    public UserResponse getMyProfile(String keycloakId){
+        User user = userRepository.findByKeycloakId(keycloakId)
+            .orElseThrow(() -> new KeycloakUserNotFoundException(keycloakId));
+
+        return userMapper.toResponse(user);
+    }
 }

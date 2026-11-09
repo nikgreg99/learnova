@@ -13,6 +13,7 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 
 @Service
+@Transactional
 public class CourseService {
 
     private final CourseRepository courseRepository;
@@ -61,7 +62,6 @@ public class CourseService {
         });
     }
 
-    @Transactional
     public void deleteCourseById(Long id) {
         if (!courseRepository.existsById(id)) {
             throw new CourseNotFoundException(id);
