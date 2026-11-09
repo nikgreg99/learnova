@@ -7,19 +7,28 @@ import com.learnova.dto.course.CoursePatchRequest;
 import com.learnova.dto.course.CourseRequest;
 import com.learnova.dto.course.CourseResponse;
 import com.learnova.exception.CourseNotFoundException;
+import com.learnova.exception.KeycloakUserNotFoundException;
 import com.learnova.mapper.CourseMapper;
 import com.learnova.model.Course;
 import com.learnova.model.CourseStatus;
+import com.learnova.model.User;
 import com.learnova.repository.CourseRepository;
+import com.learnova.repository.UserRepository;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.core.authority.AuthorityUtils;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
 @ExtendWith(MockitoExtension.class)
 class CourseServiceTest {
@@ -29,6 +38,9 @@ class CourseServiceTest {
 
     @Mock
     private CourseMapper courseMapper;
+
+    @Mock
+    private UserRepository userRepository;
 
     @InjectMocks
     private CourseService courseService;
@@ -40,6 +52,7 @@ class CourseServiceTest {
 
     @BeforeEach
     void setUp() {
+        SecurityContextHolder.clearContext();
         courseId = 1L;
 
         course = createCourse(courseId, "Java Fundamentals", "Introduction to Java", "49.90");
@@ -48,6 +61,19 @@ class CourseServiceTest {
 
         courseResponse = new CourseResponse(courseId, courseRequest.name(), CourseStatus.DRAFT, 1L,
                 courseRequest.description(), courseRequest.price(), null, null);
+    }
+
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
+    }
+
+    private void authenticate(String keycloakId) {
+        Jwt jwt = Jwt.withTokenValue("test-token").header("alg", "none").subject(keycloakId).issuedAt(Instant.now())
+                .expiresAt(Instant.now().plusSeconds(300)).build();
+
+        SecurityContextHolder.getContext().setAuthentication(
+                new JwtAuthenticationToken(jwt, AuthorityUtils.createAuthorityList("ROLE_INSTRUCTOR")));
     }
 
     private Course createCourse(Long id, String name, String description, String price) {
@@ -120,19 +146,57 @@ class CourseServiceTest {
 
     @Test
     void shouldAddCourse() {
+        String keycloakId = "instructor-keycloak-id";
+        authenticate(keycloakId);
+
+        User instructor = new User();
+        instructor.setId(1L);
+        instructor.setKeycloakId(keycloakId);
+
         Course newCourse = createCourse(courseId, courseRequest.name(), courseRequest.description(), "59.90");
 
         when(courseMapper.toEntity(courseRequest)).thenReturn(newCourse);
+        when(userRepository.findByKeycloakId(keycloakId)).thenReturn(Optional.of(instructor));
         when(courseRepository.save(newCourse)).thenReturn(newCourse);
         when(courseMapper.toResponse(newCourse)).thenReturn(courseResponse);
 
         var result = courseService.addCourse(courseRequest);
 
         assertEquals(courseResponse, result);
+        assertEquals(instructor, newCourse.getInstructor());
 
         verify(courseMapper).toEntity(courseRequest);
+        verify(userRepository).findByKeycloakId(keycloakId);
         verify(courseRepository).save(newCourse);
         verify(courseMapper).toResponse(newCourse);
+    }
+
+    @Test
+    void shouldThrowKeycloakUserNotFoundExceptionWhenInstructorNotInDatabase() {
+        String keycloakId = "unknown-keycloak-id";
+        authenticate(keycloakId);
+
+        Course newCourse = createCourse(courseId, courseRequest.name(), courseRequest.description(), "59.90");
+        when(courseMapper.toEntity(courseRequest)).thenReturn(newCourse);
+        when(userRepository.findByKeycloakId(keycloakId)).thenReturn(Optional.empty());
+
+        assertThrows(KeycloakUserNotFoundException.class, () -> courseService.addCourse(courseRequest));
+
+        verify(userRepository).findByKeycloakId(keycloakId);
+        verify(courseRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldThrowIllegalStateExceptionWhenUserNotAuthenticated() {
+        SecurityContextHolder.clearContext();
+
+        Course newCourse = createCourse(courseId, courseRequest.name(), courseRequest.description(), "59.90");
+        when(courseMapper.toEntity(courseRequest)).thenReturn(newCourse);
+
+        assertThrows(IllegalStateException.class, () -> courseService.addCourse(courseRequest));
+
+        verifyNoInteractions(userRepository);
+        verify(courseRepository, never()).save(any());
     }
 
     @Test

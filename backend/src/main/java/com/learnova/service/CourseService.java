@@ -1,12 +1,16 @@
 package com.learnova.service;
 
+import com.learnova.config.security.SecurityUtils;
 import com.learnova.dto.course.CoursePatchRequest;
 import com.learnova.dto.course.CourseRequest;
 import com.learnova.dto.course.CourseResponse;
 import com.learnova.exception.CourseNotFoundException;
+import com.learnova.exception.KeycloakUserNotFoundException;
 import com.learnova.mapper.CourseMapper;
 import com.learnova.model.CourseStatus;
+import com.learnova.model.User;
 import com.learnova.repository.CourseRepository;
+import com.learnova.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
@@ -18,10 +22,12 @@ public class CourseService {
 
     private final CourseRepository courseRepository;
     private final CourseMapper courseMapper;
+    private final UserRepository userRepository;
 
-    public CourseService(CourseRepository courseRepository, CourseMapper courseMapper) {
+    public CourseService(CourseRepository courseRepository, CourseMapper courseMapper, UserRepository userRepository) {
         this.courseRepository = courseRepository;
         this.courseMapper = courseMapper;
+        this.userRepository = userRepository;
     }
 
     public List<CourseResponse> getCourses() {
@@ -34,6 +40,12 @@ public class CourseService {
 
     public CourseResponse addCourse(CourseRequest courseRequest) {
         var course = courseMapper.toEntity(courseRequest);
+
+        String keycloakId = SecurityUtils.getCurrentKeycloakId();
+        User instructor = userRepository.findByKeycloakId(keycloakId)
+                .orElseThrow(() -> new KeycloakUserNotFoundException(keycloakId));
+        course.setInstructor(instructor);
+
         var savedCourse = courseRepository.save(course);
         return courseMapper.toResponse(savedCourse);
     }
