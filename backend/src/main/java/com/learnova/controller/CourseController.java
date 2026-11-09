@@ -1,4 +1,3 @@
-
 package com.learnova.controller;
 
 import com.learnova.dto.course.CoursePatchRequest;
@@ -57,7 +56,10 @@ public class CourseController {
         description = "Retrieves details of a specific course by its unique identifier"
     )
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Course found successfully"),
+        @ApiResponse(
+            responseCode = "200",
+            description = "Course found successfully"
+        ),
         @ApiResponse(
             responseCode = "404",
             description = "Course not found",
@@ -84,7 +86,10 @@ public class CourseController {
         description = "Creates a new course with name, description, and price"
     )
     @ApiResponses({
-        @ApiResponse(responseCode = "201", description = "Course created successfully"),
+        @ApiResponse(
+            responseCode = "201",
+            description = "Course created successfully"
+        ),
         @ApiResponse(
             responseCode = "400",
             description = "Invalid request payload or validation failure",
@@ -98,7 +103,9 @@ public class CourseController {
     ) {
         var createdCourse = courseService.addCourse(course);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdCourse);
+        return ResponseEntity
+            .status(HttpStatus.CREATED)
+            .body(createdCourse);
     }
 
     @Operation(
@@ -106,10 +113,18 @@ public class CourseController {
         description = "Updates details of an existing course by its unique identifier"
     )
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Course updated successfully"),
+        @ApiResponse(
+            responseCode = "200",
+            description = "Course updated successfully"
+        ),
         @ApiResponse(
             responseCode = "400",
             description = "Invalid request payload or validation failure",
+            content = @Content(schema = @Schema(implementation = ApiError.class))
+        ),
+        @ApiResponse(
+            responseCode = "403",
+            description = "User is not authorized to update this course",
             content = @Content(schema = @Schema(implementation = ApiError.class))
         ),
         @ApiResponse(
@@ -119,7 +134,10 @@ public class CourseController {
         )
     })
     @PutMapping("/{id}")
-    @PreAuthorize("@courseSecurityService.isOwner(#id)")
+    @PreAuthorize(
+        "hasRole('ADMIN') or " +
+            "(hasRole('INSTRUCTOR') and @courseSecurityService.isOwner(#id))"
+    )
     public ResponseEntity<CourseResponse> updateCourse(
         @Parameter(
             description = "Unique ID of the course to update",
@@ -140,10 +158,18 @@ public class CourseController {
         description = "Updates selected fields of an existing course"
     )
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Course partially updated successfully"),
+        @ApiResponse(
+            responseCode = "200",
+            description = "Course partially updated successfully"
+        ),
         @ApiResponse(
             responseCode = "400",
             description = "Invalid request payload or validation failure",
+            content = @Content(schema = @Schema(implementation = ApiError.class))
+        ),
+        @ApiResponse(
+            responseCode = "403",
+            description = "User is not authorized to update this course",
             content = @Content(schema = @Schema(implementation = ApiError.class))
         ),
         @ApiResponse(
@@ -153,7 +179,10 @@ public class CourseController {
         )
     })
     @PatchMapping("/{id}")
-    @PreAuthorize("hasAnyRole('INSTRUCTOR', 'ADMIN')")
+    @PreAuthorize(
+        "hasRole('ADMIN') or " +
+            "(hasRole('INSTRUCTOR') and @courseSecurityService.isOwner(#id))"
+    )
     public ResponseEntity<CourseResponse> patchCourse(
         @Parameter(
             description = "Unique ID of the course to update",
@@ -174,10 +203,18 @@ public class CourseController {
         description = "Updates the publication status of an existing course"
     )
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Course status updated successfully"),
+        @ApiResponse(
+            responseCode = "200",
+            description = "Course status updated successfully"
+        ),
         @ApiResponse(
             responseCode = "400",
             description = "Invalid request payload or validation failure",
+            content = @Content(schema = @Schema(implementation = ApiError.class))
+        ),
+        @ApiResponse(
+            responseCode = "403",
+            description = "User is not authorized to update this course status",
             content = @Content(schema = @Schema(implementation = ApiError.class))
         ),
         @ApiResponse(
@@ -187,7 +224,10 @@ public class CourseController {
         )
     })
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('INSTRUCTOR', 'ADMIN')")
+    @PreAuthorize(
+        "hasRole('ADMIN') or " +
+            "(hasRole('INSTRUCTOR') and @courseSecurityService.isOwner(#id))"
+    )
     public ResponseEntity<CourseResponse> updateCourseStatus(
         @Parameter(
             description = "Unique ID of the course to update",
@@ -197,7 +237,10 @@ public class CourseController {
         @PathVariable Long id,
         @RequestBody @Valid CourseStatusUpdateRequest statusRequest
     ) {
-        var course = courseService.updateCourseStatus(id, statusRequest.status());
+        var course = courseService.updateCourseStatus(
+            id,
+            statusRequest.status()
+        );
 
         return course.map(ResponseEntity::ok)
             .orElseGet(() -> ResponseEntity.notFound().build());
@@ -208,7 +251,15 @@ public class CourseController {
         description = "Deletes a course from the catalog by its unique identifier"
     )
     @ApiResponses({
-        @ApiResponse(responseCode = "204", description = "Course deleted successfully"),
+        @ApiResponse(
+            responseCode = "204",
+            description = "Course deleted successfully"
+        ),
+        @ApiResponse(
+            responseCode = "403",
+            description = "User is not authorized to delete this course",
+            content = @Content(schema = @Schema(implementation = ApiError.class))
+        ),
         @ApiResponse(
             responseCode = "404",
             description = "Course not found",
@@ -216,7 +267,10 @@ public class CourseController {
         )
     })
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('INSTRUCTOR', 'ADMIN')")
+    @PreAuthorize(
+        "hasRole('ADMIN') or " +
+            "(hasRole('INSTRUCTOR') and @courseSecurityService.isOwner(#id))"
+    )
     public ResponseEntity<Void> deleteCourse(
         @Parameter(
             description = "Unique ID of the course to delete",
@@ -227,6 +281,9 @@ public class CourseController {
     ) {
         courseService.deleteCourseById(id);
 
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        return ResponseEntity
+            .status(HttpStatus.NO_CONTENT)
+            .build();
     }
 }
+

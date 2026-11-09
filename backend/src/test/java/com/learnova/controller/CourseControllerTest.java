@@ -287,7 +287,7 @@ class CourseControllerTest {
                 .content(objectMapper.writeValueAsString(courseRequest)))
             .andExpect(status().isOk());
 
-        verify(courseSecurityService).isOwner(courseResponse.id());
+        verifyNoInteractions(courseSecurityService);
         verify(courseService).updateCourse(courseResponse.id(), courseRequest);
     }
 
@@ -376,7 +376,7 @@ class CourseControllerTest {
                 .content(objectMapper.writeValueAsString(patchRequest)))
             .andExpect(status().isOk());
 
-        verify(courseSecurityService).isOwner(courseResponse.id());
+        verifyNoInteractions(courseSecurityService);
         verify(courseService).patchCourse(courseResponse.id(), patchRequest);
     }
 
@@ -466,7 +466,7 @@ class CourseControllerTest {
                 .content(objectMapper.writeValueAsString(statusRequest)))
             .andExpect(status().isOk());
 
-        verify(courseSecurityService).isOwner(courseResponse.id());
+        verifyNoInteractions(courseSecurityService);
         verify(courseService).updateCourseStatus(
             courseResponse.id(),
             CourseStatus.PUBLISHED
@@ -530,7 +530,7 @@ class CourseControllerTest {
                 .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))))
             .andExpect(status().isNoContent());
 
-        verify(courseSecurityService).isOwner(courseResponse.id());
+        verifyNoInteractions(courseSecurityService);
         verify(courseService).deleteCourseById(courseResponse.id());
     }
 
