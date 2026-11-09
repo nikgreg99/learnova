@@ -1,106 +1,123 @@
 {
-  "realm": "learnova",
-  "enabled": true,
-  "registrationAllowed": false,
-  "loginWithEmailAllowed": false,
-  "smtpServer": {
-    "host": "mailpit",
-    "port": "1025",
-    "from": "noreply@learnova.local",
-    "fromDisplayName": "Learnova",
-    "ssl": "false",
-    "starttls": "false",
-    "auth": "false"
-  },
-  "roles": {
-    "realm": [
-      {
-        "name": "STUDENT",
-        "description": "Can access learning resources"
-      },
-      {
-        "name": "INSTRUCTOR",
-        "description": "Can manage courses"
-      },
-      {
-        "name": "ADMIN",
-        "description": "Can manage the platform"
-      }
-    ]
-  },
-
-  "clients": [
-    {
-      "clientId": "learnova-postman",
-      "name": "Learnova Postman",
-      "description": "Public client for local API testing using Authorization Code with PKCE",
-      "enabled": true,
-      "protocol": "openid-connect",
-      "publicClient": true,
-      "clientAuthenticatorType": "client-secret",
-      "standardFlowEnabled": true,
-      "directAccessGrantsEnabled": false,
-      "implicitFlowEnabled": false,
-      "serviceAccountsEnabled": false,
-      "authorizationServicesEnabled": false,
-      "redirectUris": [
-        "https://oauth.pstmn.io/v1/callback",
-        "https://oauth.pstmn.io/v1/browser-callback"
-      ],
-      "webOrigins": [
-        "https://oauth.pstmn.io"
-      ],
-      "attributes": {
-        "pkce.code.challenge.method": "S256"
-      }
+    "realm": "learnova",
+    "enabled": true,
+    "registrationAllowed": false,
+    "loginWithEmailAllowed": false,
+    "smtpServer": {
+        "host": "mailpit",
+        "port": "1025",
+        "from": "noreply@learnova.local",
+        "fromDisplayName": "Learnova",
+        "ssl": "false",
+        "starttls": "false",
+        "auth": "false"
     },
-    {
-      "clientId": "learnova-admin-client",
-      "name": "Learnova Admin Client",
-      "description": "Backend service account for Learnova Keycloak administration",
-      "enabled": true,
-      "protocol": "openid-connect",
-      "publicClient": false,
-      "clientAuthenticatorType": "client-secret",
-      "standardFlowEnabled": false,
-      "implicitFlowEnabled": false,
-      "directAccessGrantsEnabled": false,
-      "serviceAccountsEnabled": true,
-      "authorizationServicesEnabled": false
-    }
-  ],
-
-  "users": [
-    {
-      "username": "service-account-learnova-admin-client",
-      "enabled": true,
-      "serviceAccountClientId": "learnova-admin-client",
-      "clientRoles": {
-        "realm-management": [
-          "manage-users",
-          "query-users",
-          "view-users"
+    "roles": {
+        "realm": [
+            {
+                "name": "STUDENT",
+                "description": "Can access learning resources"
+            },
+            {
+                "name": "INSTRUCTOR",
+                "description": "Can manage courses"
+            },
+            {
+                "name": "ADMIN",
+                "description": "Can manage the platform"
+            }
         ]
-      }
     },
-    {
-      "username": "test-student",
-      "enabled": true,
-      "email": "test-student@learnova.local",
-      "emailVerified": true,
-      "firstName": "Test",
-      "lastName": "Student",
-      "credentials": [
+    "clients": [
         {
-          "type": "password",
-          "value": "LearnovaLocal123!",
-          "temporary": false
+            "clientId": "learnova-postman",
+            "name": "Learnova Postman",
+            "description": "Public client for local API testing using Authorization Code with PKCE",
+            "enabled": true,
+            "protocol": "openid-connect",
+            "publicClient": true,
+            "clientAuthenticatorType": "client-secret",
+            "standardFlowEnabled": true,
+            "directAccessGrantsEnabled": false,
+            "implicitFlowEnabled": false,
+            "serviceAccountsEnabled": false,
+            "authorizationServicesEnabled": false,
+            "redirectUris": [
+                "https://oauth.pstmn.io/v1/callback",
+                "https://oauth.pstmn.io/v1/browser-callback"
+            ],
+            "webOrigins": [
+                "https://oauth.pstmn.io"
+            ],
+            "attributes": {
+                "pkce.code.challenge.method": "S256"
+            }
+        },
+        {
+            "clientId": "learnova-admin-client",
+            "name": "Learnova Admin Client",
+            "description": "Backend service account for Learnova Keycloak administration",
+            "enabled": true,
+            "protocol": "openid-connect",
+            "publicClient": false,
+            "clientAuthenticatorType": "client-secret",
+            "standardFlowEnabled": false,
+            "implicitFlowEnabled": false,
+            "directAccessGrantsEnabled": false,
+            "serviceAccountsEnabled": true,
+            "authorizationServicesEnabled": false
         }
-      ],
-      "realmRoles": [
-        "STUDENT"
-      ],
-      "requiredActions": []
-    }
-  ]
+    ],
+    "users": [
+        {
+            "username": "service-account-learnova-admin-client",
+            "enabled": true,
+            "serviceAccountClientId": "learnova-admin-client",
+            "clientRoles": {
+                "realm-management": [
+                    "manage-users",
+                    "query-users",
+                    "view-users"
+                ]
+            }
+        },
+        {
+            "username": "test-student",
+            "enabled": true,
+            "email": "test-student@learnova.local",
+            "emailVerified": true,
+            "firstName": "Test",
+            "lastName": "Student",
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "LearnovaLocal123!",
+                    "temporary": false
+                }
+            ],
+            "realmRoles": [
+                "STUDENT"
+            ],
+            "requiredActions": []
+        },
+        {
+            "username": "test-instructor",
+            "enabled": true,
+            "email": "test-instructor@learnova.local",
+            "emailVerified": true,
+            "firstName": "Test",
+            "lastName": "Instructor",
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "LearnovaLocal123!",
+                    "temporary": false
+                }
+            ],
+            "realmRoles": [
+                "INSTRUCTOR"
+            ],
+            "requiredActions": []
+        }
+    ]
 }
