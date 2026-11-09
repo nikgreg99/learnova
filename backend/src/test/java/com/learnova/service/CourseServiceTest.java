@@ -68,12 +68,16 @@ class CourseServiceTest {
         SecurityContextHolder.clearContext();
     }
 
-    private void authenticate(String keycloakId) {
+    private void authenticate(String role, String keycloakId) {
         Jwt jwt = Jwt.withTokenValue("test-token").header("alg", "none").subject(keycloakId).issuedAt(Instant.now())
                 .expiresAt(Instant.now().plusSeconds(300)).build();
 
         SecurityContextHolder.getContext().setAuthentication(
-                new JwtAuthenticationToken(jwt, AuthorityUtils.createAuthorityList("ROLE_INSTRUCTOR")));
+                new JwtAuthenticationToken(jwt, AuthorityUtils.createAuthorityList("ROLE_" + role)));
+    }
+
+    private void authenticate(String keycloakId) {
+        authenticate("INSTRUCTOR", keycloakId);
     }
 
     private Course createCourse(Long id, String name, String description, String price) {
@@ -116,6 +120,90 @@ class CourseServiceTest {
 
         verify(courseRepository).findAll();
         verifyNoInteractions(courseMapper);
+    }
+
+    @Test
+    void getCourses_shouldReturnPublishedOnlyWhenUserIsStudent() {
+        authenticate("STUDENT", "student-123");
+
+        Course publishedCourse = createCourse(1L, "Published Course", "Desc", "49.90");
+        publishedCourse.setStatus(CourseStatus.PUBLISHED);
+
+        CourseResponse publishedResponse = new CourseResponse(1L, "Published Course", CourseStatus.PUBLISHED, 1L,
+                "Desc", new BigDecimal("49.90"), null, null);
+
+        when(courseRepository.findByStatus(CourseStatus.PUBLISHED)).thenReturn(List.of(publishedCourse));
+        when(courseMapper.toResponse(publishedCourse)).thenReturn(publishedResponse);
+
+        var result = courseService.getCourses();
+
+        assertEquals(1, result.size());
+        assertEquals(publishedResponse, result.get(0));
+
+        verify(courseRepository).findByStatus(CourseStatus.PUBLISHED);
+    }
+
+    @Test
+    void getCourses_shouldReturnPublishedAndOwnCoursesWhenUserIsInstructor() {
+        String instructorKeycloakId = "instructor-123";
+        authenticate("INSTRUCTOR", instructorKeycloakId);
+
+        User myInstructor = new User();
+        myInstructor.setKeycloakId(instructorKeycloakId);
+
+        User otherInstructor = new User();
+        otherInstructor.setKeycloakId("other-instructor");
+
+        Course myDraftCourse = createCourse(1L, "My Draft", "Desc", "49.90");
+        myDraftCourse.setStatus(CourseStatus.DRAFT);
+        myDraftCourse.setInstructor(myInstructor);
+
+        Course otherPublishedCourse = createCourse(2L, "Other Published", "Desc", "49.90");
+        otherPublishedCourse.setStatus(CourseStatus.PUBLISHED);
+        otherPublishedCourse.setInstructor(otherInstructor);
+
+        Course otherDraftCourse = createCourse(3L, "Other Draft", "Desc", "49.90");
+        otherDraftCourse.setStatus(CourseStatus.DRAFT);
+        otherDraftCourse.setInstructor(otherInstructor);
+
+        CourseResponse myDraftResponse = new CourseResponse(1L, "My Draft", CourseStatus.DRAFT, 1L, "Desc",
+                new BigDecimal("49.90"), null, null);
+        CourseResponse otherPublishedResponse = new CourseResponse(2L, "Other Published", CourseStatus.PUBLISHED, 2L,
+                "Desc", new BigDecimal("49.90"), null, null);
+
+        when(courseRepository.findAll()).thenReturn(List.of(myDraftCourse, otherPublishedCourse, otherDraftCourse));
+        when(courseMapper.toResponse(myDraftCourse)).thenReturn(myDraftResponse);
+        when(courseMapper.toResponse(otherPublishedCourse)).thenReturn(otherPublishedResponse);
+
+        var result = courseService.getCourses();
+
+        assertEquals(2, result.size());
+        assertTrue(result.contains(myDraftResponse));
+        assertTrue(result.contains(otherPublishedResponse));
+    }
+
+    @Test
+    void getCourses_shouldReturnAllCoursesWhenUserIsAdmin() {
+        authenticate("ADMIN", "admin-123");
+
+        Course draftCourse = createCourse(1L, "Draft", "Desc", "49.90");
+        draftCourse.setStatus(CourseStatus.DRAFT);
+        Course publishedCourse = createCourse(2L, "Published", "Desc", "49.90");
+        publishedCourse.setStatus(CourseStatus.PUBLISHED);
+
+        CourseResponse draftResponse = new CourseResponse(1L, "Draft", CourseStatus.DRAFT, null, "Desc",
+                new BigDecimal("49.90"), null, null);
+        CourseResponse publishedResponse = new CourseResponse(2L, "Published", CourseStatus.PUBLISHED, null, "Desc",
+                new BigDecimal("49.90"), null, null);
+
+        when(courseRepository.findAll()).thenReturn(List.of(draftCourse, publishedCourse));
+        when(courseMapper.toResponse(draftCourse)).thenReturn(draftResponse);
+        when(courseMapper.toResponse(publishedCourse)).thenReturn(publishedResponse);
+
+        var result = courseService.getCourses();
+
+        assertEquals(2, result.size());
+        verify(courseRepository).findAll();
     }
 
     @Test

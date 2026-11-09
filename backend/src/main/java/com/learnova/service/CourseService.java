@@ -14,6 +14,8 @@ import com.learnova.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -31,7 +33,28 @@ public class CourseService {
     }
 
     public List<CourseResponse> getCourses() {
-        return courseRepository.findAll().stream().map(courseMapper::toResponse).toList();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()
+                || authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
+            return courseRepository.findAll().stream().map(courseMapper::toResponse).toList();
+        }
+
+        boolean isInstructor = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_INSTRUCTOR"));
+
+        if (isInstructor) {
+            String keycloakId = SecurityUtils.getCurrentKeycloakId();
+            return courseRepository.findAll().stream()
+                    .filter(course -> course.getStatus() == CourseStatus.PUBLISHED
+                            || (course.getInstructor() != null
+                                    && keycloakId.equals(course.getInstructor().getKeycloakId())))
+                    .map(courseMapper::toResponse)
+                    .toList();
+        }
+
+        return courseRepository.findByStatus(CourseStatus.PUBLISHED).stream()
+                .map(courseMapper::toResponse)
+                .toList();
     }
 
     public Optional<CourseResponse> getCourseById(Long id) {

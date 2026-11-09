@@ -30,14 +30,15 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         String bucket;
         int limit;
 
+        String clientIp = resolveClientIp(request);
         if (publicRegistration) {
-            bucket = "registration:ip:" + request.getRemoteAddr();
+            bucket = "registration:ip:" + clientIp;
             limit = properties.getPublicRequestsPerMinute();
         } else if (authenticatedUser != null) {
             bucket = "authenticated:" + authenticatedUser;
             limit = properties.getAuthenticatedRequestsPerMinute();
         } else {
-            bucket = "anonymous:ip:" + request.getRemoteAddr();
+            bucket = "anonymous:ip:" + clientIp;
             limit = properties.getAnonymousRequestsPerMinute();
         }
 
@@ -66,5 +67,13 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         }
 
         return "user:" + authentication.getName();
+    }
+
+    private String resolveClientIp(HttpServletRequest request) {
+        String forwardedFor = request.getHeader("X-Forwarded-For");
+        if (forwardedFor != null && !forwardedFor.isBlank()) {
+            return forwardedFor.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
     }
 }

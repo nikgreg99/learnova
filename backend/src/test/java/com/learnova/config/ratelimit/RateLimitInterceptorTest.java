@@ -91,6 +91,19 @@ class RateLimitInterceptorTest {
         assertEquals("42", response.getHeader(HttpHeaders.RETRY_AFTER));
     }
 
+    @Test
+    void preHandle_shouldUseXForwardedForHeaderWhenPresent() throws Exception {
+        MockHttpServletRequest request = request("POST", "/api/v1/users", "10.0.0.1");
+        request.addHeader("X-Forwarded-For", "203.0.113.195, 70.41.3.18, 150.172.238.178");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        when(store.consume("registration:ip:203.0.113.195", 10, Duration.ofMinutes(1)))
+                .thenReturn(RateLimitDecision.permit());
+
+        assertTrue(interceptor.preHandle(request, response, new Object()));
+
+        verify(store).consume("registration:ip:203.0.113.195", 10, Duration.ofMinutes(1));
+    }
+
     private MockHttpServletRequest request(String method, String path, String remoteAddress) {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setMethod(method);
