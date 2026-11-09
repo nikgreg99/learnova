@@ -4,7 +4,6 @@ package com.learnova.controller;
 import com.learnova.config.ratelimit.RateLimitInterceptor;
 import com.learnova.config.security.SecurityConfig;
 import com.learnova.dto.user.UserProfileUpdateRequest;
-import com.learnova.dto.user.UserRequest;
 import com.learnova.dto.user.UserResponse;
 import com.learnova.model.UserStatus;
 import com.learnova.service.UserService;
