@@ -79,12 +79,24 @@ public class GlobalMessageHandler {
 
     @ExceptionHandler(KeycloakUserNotFoundException.class)
     public ResponseEntity<ApiError> handleKeycloakUserNotFoundException(KeycloakUserNotFoundException ex,
-                                                                          HttpServletRequest request) {
+            HttpServletRequest request) {
         String message = messageSource.getMessage("user.keycloak-not-found", new Object[]{
-            ex.getKeycloakId()
+                ex.getKeycloakId()
         }, request.getLocale());
 
         return buildError(HttpStatus.CONFLICT, message, request);
+    }
+
+    @ExceptionHandler(RatingNotFoundException.class)
+    public ResponseEntity<ApiError> handleRatingNotFoundException(RatingNotFoundException ex,
+            HttpServletRequest request) {
+        return buildError(HttpStatus.NOT_FOUND, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(DuplicateRatingException.class)
+    public ResponseEntity<ApiError> handleDuplicateRatingException(DuplicateRatingException ex,
+            HttpServletRequest request) {
+        return buildError(HttpStatus.CONFLICT, ex.getMessage(), request);
     }
 
     private ResponseEntity<ApiError> buildError(HttpStatus httpStatus, String message, HttpServletRequest request) {
