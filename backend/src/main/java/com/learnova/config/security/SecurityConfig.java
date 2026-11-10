@@ -22,7 +22,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(
         HttpSecurity http,
         KeycloakJwtAuthenticationConverter converter
-    ) throws Exception {
+    ) {
 
         return http
             .csrf(AbstractHttpConfigurer::disable)
@@ -38,6 +38,11 @@ public class SecurityConfig {
 
                 .requestMatchers(HttpMethod.POST, "/api/v1/users")
                 .permitAll()
+
+                .requestMatchers(
+                    HttpMethod.POST,
+                    "/api/v1/auth/password-reset"
+                ).permitAll()
 
                 .requestMatchers("/api/v1/**")
                 .authenticated()

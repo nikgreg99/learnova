@@ -29,4 +29,8 @@ public class KeycloakUserService {
     public void updateProfile(String keycloakUserId, UserProfileUpdateRequest request) {
         keycloakClient.updateUserProfile(keycloakUserId, request);
     }
+
+    public void sendPasswordResetEmail(String email){
+        keycloakClient.sendPasswordResetEmail(email);
+    }
 }

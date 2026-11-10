@@ -22,7 +22,7 @@ public class RedisRateLimitStore implements RateLimitStore {
 
     static {
         CONSUME_SCRIPT.setLocation(
-            new ClassPathResource("scripts/rate-limit.lua")
+            new ClassPathResource("scripts/rate-limiting.lua")
         );
         CONSUME_SCRIPT.setResultType(Long.class);
     }

@@ -37,9 +37,53 @@
                         "description": "Returns the profile associated with the authenticated Keycloak access token."
                     },
                     "response": []
+                },
+                {
+                    "name": "Request password reset",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"{{userEmail}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/auth/password-reset",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "auth",
+                                "password-reset"
+                            ]
+                        },
+                        "description": "Requests a password reset email. This endpoint is public and does not require a Bearer token. It should return 202 Accepted regardless of whether the email belongs to an existing account, preventing user enumeration. For local testing, inspect the message in Mailpit (usually http://localhost:8025)."
+                    },
+                    "response": []
                 }
             ],
-            "description": "Authentication and current-user information.\n\nProtected requests use the collection-level OAuth 2.0 Authorization Code flow with PKCE (S256). In Postman, select Get New Access Token and then Use Token. Choose the matching Keycloak test account in the browser login page before requesting a token."
+            "description": "Authentication and current-user information.\n\nProtected requests use the collection-level OAuth 2.0 Authorization Code flow with PKCE (S256). In Postman, select Get New Access Token and then Use Token. Choose the matching Keycloak test account in the browser login page before requesting a token.\n\nPassword reset is public and does not require OAuth 2.0 authentication. Use Request password reset with the email address registered in Learnova; inspect the delivered email in Mailpit."
         },
         {
             "name": "Users",
