@@ -591,6 +591,370 @@
                 }
             ],
             "description": "Lesson management for a specific course.\n\nReading lessons requires authentication and an authorized role. Creating, updating, partially updating, and deleting lessons require ownership of the parent course or ADMIN privileges."
+        },
+        {
+            "name": "Course Ratings",
+            "description": "Course rating and review operations.\n\nAllows authenticated users (STUDENT, INSTRUCTOR, ADMIN) to submit ratings (1-5) and optional reviews for courses, retrieve rating summaries, and manage their own reviews.",
+            "item": [
+                {
+                    "name": "Get course ratings",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/courses/{{courseId}}/ratings",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "courses",
+                                "{{courseId}}",
+                                "ratings"
+                            ]
+                        },
+                        "description": "Returns all ratings and reviews for the specified course."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get course rating summary",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/courses/{{courseId}}/ratings/summary",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "courses",
+                                "{{courseId}}",
+                                "ratings",
+                                "summary"
+                            ]
+                        },
+                        "description": "Returns the average rating score and total number of ratings for the course."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get my course rating",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/courses/{{courseId}}/ratings/me",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "courses",
+                                "{{courseId}}",
+                                "ratings",
+                                "me"
+                            ]
+                        },
+                        "description": "Returns the authenticated user's rating for the specified course."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Submit course rating",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"rating\": {{ratingScore}},\n  \"review\": \"{{ratingReview}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/courses/{{courseId}}/ratings",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "courses",
+                                "{{courseId}}",
+                                "ratings"
+                            ]
+                        },
+                        "description": "Submits a rating (1-5) and an optional review for the specified course. Users can only rate a course once."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update my course rating",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"rating\": {{ratingScore}},\n  \"review\": \"{{ratingReview}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/courses/{{courseId}}/ratings/me",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "courses",
+                                "{{courseId}}",
+                                "ratings",
+                                "me"
+                            ]
+                        },
+                        "description": "Updates the authenticated user's existing rating and review for the course."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete my course rating",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/courses/{{courseId}}/ratings/me",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "courses",
+                                "{{courseId}}",
+                                "ratings",
+                                "me"
+                            ]
+                        },
+                        "description": "Deletes the authenticated user's rating for the specified course."
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Lesson Ratings",
+            "description": "Lesson rating and review operations.\n\nAllows authenticated users (STUDENT, INSTRUCTOR, ADMIN) to submit ratings (1-5) and optional reviews for lessons, retrieve rating summaries, and manage their own reviews.",
+            "item": [
+                {
+                    "name": "Get lesson ratings",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/lessons/{{lessonId}}/ratings",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "lessons",
+                                "{{lessonId}}",
+                                "ratings"
+                            ]
+                        },
+                        "description": "Returns all ratings and reviews for the specified lesson."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get lesson rating summary",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/lessons/{{lessonId}}/ratings/summary",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "lessons",
+                                "{{lessonId}}",
+                                "ratings",
+                                "summary"
+                            ]
+                        },
+                        "description": "Returns the average rating score and total number of ratings for the lesson."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get my lesson rating",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/lessons/{{lessonId}}/ratings/me",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "lessons",
+                                "{{lessonId}}",
+                                "ratings",
+                                "me"
+                            ]
+                        },
+                        "description": "Returns the authenticated user's rating for the specified lesson."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Submit lesson rating",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"rating\": {{ratingScore}},\n  \"review\": \"{{ratingReview}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/lessons/{{lessonId}}/ratings",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "lessons",
+                                "{{lessonId}}",
+                                "ratings"
+                            ]
+                        },
+                        "description": "Submits a rating (1-5) and an optional review for the specified lesson. Users can only rate a lesson once."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update my lesson rating",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"rating\": {{ratingScore}},\n  \"review\": \"{{ratingReview}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/lessons/{{lessonId}}/ratings/me",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "lessons",
+                                "{{lessonId}}",
+                                "ratings",
+                                "me"
+                            ]
+                        },
+                        "description": "Updates the authenticated user's existing rating and review for the lesson."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete my lesson rating",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/lessons/{{lessonId}}/ratings/me",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "lessons",
+                                "{{lessonId}}",
+                                "ratings",
+                                "me"
+                            ]
+                        },
+                        "description": "Deletes the authenticated user's rating for the specified lesson."
+                    },
+                    "response": []
+                }
+            ]
         }
     ],
     "auth": {
@@ -737,6 +1101,14 @@
         {
             "key": "testAdminUsername",
             "value": "learnova-admin"
+        },
+        {
+            "key": "ratingScore",
+            "value": "5"
+        },
+        {
+            "key": "ratingReview",
+            "value": "Excellent course with clear explanations and practical examples."
         }
     ]
 }
