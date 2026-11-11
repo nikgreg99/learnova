@@ -62,7 +62,7 @@ is_placeholder() {
     value="$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')"
 
     case "$value" in
-        ""|change_me|change-me|changeme|your_*|replace_*|example*|placeholder*|sample*|dummy*|test|test-*|none|null|unset|'<'*|'${'*|'$('*|'%'*)
+        ""|change_me|change-me|changeme|your_*|replace_*|example*|placeholder*|sample*|dummy*|test|test-*|none|null|unset|read|write|'<'*|'${'*|'$('*|'%')
             return 0
             ;;
         *)

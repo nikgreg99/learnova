@@ -17,6 +17,11 @@ if [[ "$actual_digest" != "$IMAGE_DIGEST" ]]; then
   exit 1
 fi
 
+echo "Verifying Cosign signature for $IMAGE_NAME@$IMAGE_DIGEST..."
+cosign verify "$IMAGE_NAME@$IMAGE_DIGEST" \
+  --certificate-identity-regexp "^https://github.com/${GITHUB_REPOSITORY:-}/" \
+  --certificate-oidc-issuer "https://token.actions.githubusercontent.com"
+
 {
   echo "### Published container image"
   echo
@@ -26,4 +31,5 @@ fi
     [[ -z "$tag" ]] || echo "  - \`$tag\`"
   done <<< "${IMAGE_TAGS:-}"
   echo "- Digest: \`$IMAGE_DIGEST\`"
+  echo "- Cosign signature: :white_check_mark: Verified (Sigstore keyless via GitHub OIDC)"
 } >> "$GITHUB_STEP_SUMMARY"
