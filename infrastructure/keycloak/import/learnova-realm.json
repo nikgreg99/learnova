@@ -93,7 +93,7 @@
             "credentials": [
                 {
                     "type": "password",
-                    "value": "LearnovaLocal123!",
+                    "value": "LearnovaStudent2026!",
                     "temporary": false
                 }
             ],
@@ -112,7 +112,7 @@
             "credentials": [
                 {
                     "type": "password",
-                    "value": "LearnovaLocal123!",
+                    "value": "LearnovaInstructor2026!",
                     "temporary": false
                 }
             ],
