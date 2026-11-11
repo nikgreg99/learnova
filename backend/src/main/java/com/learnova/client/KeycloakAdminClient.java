@@ -15,6 +15,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -161,6 +162,50 @@ public class KeycloakAdminClient {
 
         return response.accessToken();
     }
+
+    public void sendPasswordResetEmail(String email) {
+        String accessToken = getAdminToken();
+
+        URI searchUri = UriComponentsBuilder
+            .fromUriString(adminUsersUri())
+            .queryParam("email", email)
+            .queryParam("exact", true)
+            .build()
+            .encode()
+            .toUri();
+
+        List<KeycloakUserRepresentation> users = restClient.get()
+            .uri(searchUri)
+            .headers(headers -> headers.setBearerAuth(accessToken))
+            .retrieve()
+            .body(new ParameterizedTypeReference<>() {});
+
+        if (users == null) {
+            return;
+        }
+
+        List<KeycloakUserRepresentation> matches = users.stream()
+            .filter(user -> user.id() != null)
+            .filter(KeycloakUserRepresentation::enabled)
+            .filter(user -> user.email() != null)
+            .filter(user -> user.email().equalsIgnoreCase(email))
+            .toList();
+
+        if (matches.size() != 1) {
+            return;
+        }
+
+        String keycloakUserId = matches.getFirst().id();
+
+        restClient.put()
+            .uri(adminUserUri(keycloakUserId) + "/execute-actions-email")
+            .headers(headers -> headers.setBearerAuth(accessToken))
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(List.of("UPDATE_PASSWORD"))
+            .retrieve()
+            .toBodilessEntity();
+    }
+
 
     private String tokenUri() {
         return baseUrl() + "/realms/" + properties.realm() + "/protocol/openid-connect/token";

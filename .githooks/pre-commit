@@ -3,9 +3,18 @@ set -euo pipefail
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 BACKEND_DIR="${REPO_ROOT}/backend"
-SECRET_ASSIGNMENT_REGEX="(password|passwd|passphrase|pwd|secret|token|api[-_]?key|private[-_]?key|access[-_]?key|client[-_]?secret)[[:space:]]*[\"']?[[:space:]]*[:=][[:space:]]*[\"']?([^[:space:],;\"']+)"
+
+# Match secret-related names, including camelCase variants.
+SECRET_KEY_PATTERN='(password|passwd|passphrase|pwd|secret|token|api[-_]?key|private[-_]?key|access[-_]?key|client[-_]?secret|clientSecret|accessToken|refreshToken|authToken)'
+
+# Only quoted literal assignments are scanned in source files.
+SECRET_QUOTED_ASSIGNMENT_REGEX="(^|[^[:alnum:]_])${SECRET_KEY_PATTERN}([^[:alnum:]_]|$)[[:space:]]*[\"']?[[:space:]]*[:=][[:space:]]*[\"']([^\"']+)[\"']"
+
+# Unquoted literal assignments are checked only in configuration files.
+SECRET_UNQUOTED_ASSIGNMENT_REGEX="(^|[^[:alnum:]_])${SECRET_KEY_PATTERN}([^[:alnum:]_]|$)[[:space:]]*[\"']?[[:space:]]*[:=][[:space:]]*([^[:space:],;\"'#]+)"
 
 declare -a STAGED_FILES=()
+
 while IFS= read -r -d '' file; do
     STAGED_FILES+=("$file")
 done < <(git diff --cached --name-only -z --diff-filter=ACMR)
@@ -37,6 +46,17 @@ is_excluded_from_secret_scan() {
     esac
 }
 
+is_config_file() {
+    case "$1" in
+        *.yml|*.yaml|*.properties|*.toml|*.ini|*.conf|*.cfg|*.sh)
+            return 0
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
 is_placeholder() {
     local value
     value="$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')"
@@ -54,6 +74,7 @@ is_placeholder() {
 scan_staged_additions() {
     local file="$1"
     local line
+    local secret_value
 
     while IFS= read -r line; do
         case "$line" in
@@ -62,17 +83,34 @@ scan_staged_additions() {
             *) continue ;;
         esac
 
-        if [[ "$line" =~ $SECRET_ASSIGNMENT_REGEX ]]; then
-            if ! is_placeholder "${BASH_REMATCH[2]}"; then
+        # Detect quoted hardcoded credentials.
+        if [[ "$line" =~ $SECRET_QUOTED_ASSIGNMENT_REGEX ]]; then
+            secret_value="${BASH_REMATCH[3]}"
+
+            if ! is_placeholder "$secret_value"; then
                 printf 'Possible hard-coded credential in staged file: %s\n' "$file"
                 return 1
             fi
         fi
 
+        # Detect unquoted hardcoded credentials in configuration files.
+        if is_config_file "$file" &&
+           [[ "$line" =~ $SECRET_UNQUOTED_ASSIGNMENT_REGEX ]]; then
+
+            secret_value="${BASH_REMATCH[4]}"
+
+            if ! is_placeholder "$secret_value"; then
+                printf 'Possible hard-coded credential in staged file: %s\n' "$file"
+                return 1
+            fi
+        fi
+
+        # Detect private key material.
         if [[ "$line" =~ -----BEGIN[[:space:]].*PRIVATE[[:space:]]KEY----- ]]; then
             printf 'Private key material in staged file: %s\n' "$file"
             return 1
         fi
+
     done < <(git diff --cached --no-ext-diff --unified=0 -- "$file")
 }
 
@@ -166,4 +204,3 @@ fi
 git add -- "${FORMAT_FILES[@]}"
 
 echo "Staged formatting complete."
-

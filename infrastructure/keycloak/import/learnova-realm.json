@@ -1,6 +1,8 @@
+
 {
     "realm": "learnova",
     "enabled": true,
+    "passwordPolicy": "length(10) and upperCase(1) and lowerCase(1) and digits(1) and specialChars(1) and notUsername and passwordHistory(5)",
     "registrationAllowed": false,
     "loginWithEmailAllowed": false,
     "smtpServer": {
@@ -91,7 +93,7 @@
             "credentials": [
                 {
                     "type": "password",
-                    "value": "LearnovaLocal123!",
+                    "value": "LearnovaStudent2026!",
                     "temporary": false
                 }
             ],
@@ -110,7 +112,7 @@
             "credentials": [
                 {
                     "type": "password",
-                    "value": "LearnovaLocal123!",
+                    "value": "LearnovaInstructor2026!",
                     "temporary": false
                 }
             ],

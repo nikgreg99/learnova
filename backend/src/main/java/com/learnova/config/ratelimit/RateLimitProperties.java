@@ -13,5 +13,9 @@ public class RateLimitProperties {
     private int authenticatedRequestsPerMinute = 100;
     private int publicRequestsPerMinute = 10;
     private int anonymousRequestsPerMinute = 60;
+
     private Duration window = Duration.ofMinutes(1);
+
+    private int passwordResetRequestsPerWindow = 3;
+    private Duration passwordResetWindow = Duration.ofMinutes(15);
 }

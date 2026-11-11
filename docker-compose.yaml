@@ -35,6 +35,7 @@ services:
 
     volumes:
       - ./infrastructure/keycloak/import:/opt/keycloak/data/import:ro
+      - ./infrastructure/keycloak/themes:/opt/keycloak/themes:ro
 
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:?KEYCLOAK_ADMIN is required}
