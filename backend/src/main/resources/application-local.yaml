@@ -1,5 +1,5 @@
-
 spring:
+
   config:
     import: optional:file:.env[.properties]
 
@@ -9,9 +9,5 @@ spring:
     username: ${DB_USER}
     password: ${DB_PASSWORD}
 
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: ${KEYCLOAK_ISSUER_URI:${KEYCLOAK_SCHEME:http}://${KEYCLOAK_HOST:localhost}:${KEYCLOAK_PORT:8081}/realms/${KEYCLOAK_REALM:learnova}}
-          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:${KEYCLOAK_SCHEME:http}://${KEYCLOAK_HOST:localhost}:${KEYCLOAK_PORT:8081}/realms/${KEYCLOAK_REALM:learnova}/protocol/openid-connect/certs}
+  jpa:
+    show-sql: true
