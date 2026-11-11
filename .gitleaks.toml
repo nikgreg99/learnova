@@ -1,0 +1,14 @@
+title = "Learnova Gitleaks Configuration"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Allow known example and documentation files"
+
+paths = [
+    '''(^|/)docs/examples/''',
+    '''(^|/)examples/''',
+    '''(^|/)\.env\.example$''',
+    '''(^|/)application-example\.yml$'''
+]
