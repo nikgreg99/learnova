@@ -5,7 +5,7 @@ import com.learnova.config.ratelimit.RateLimitInterceptor;
 import com.learnova.config.security.SecurityConfig;
 import com.learnova.dto.auth.AuthUserResponse;
 import com.learnova.service.AuthService;
-
+import com.learnova.service.KeycloakUserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -37,6 +37,9 @@ class AuthControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @MockitoBean
+    private KeycloakUserService keycloakUserService;
 
     @MockitoBean
     private AuthService authService;
