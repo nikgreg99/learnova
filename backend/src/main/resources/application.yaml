@@ -1,3 +1,4 @@
+
 spring:
   application:
     name: ${APP_NAME:learnova}
@@ -13,7 +14,7 @@ spring:
     database: POSTGRESQL
     hibernate:
       ddl-auto: validate
-    show-sql: true
+    show-sql: false
 
   sql:
     init:
@@ -38,8 +39,8 @@ spring:
   rabbitmq:
     host: ${RABBITMQ_HOST:localhost}
     port: ${RABBITMQ_PORT:5672}
-    username: ${RABBITMQ_USER}
-    password: ${RABBITMQ_PASSWORD}
+    username: ${RABBITMQ_USER:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
     virtual-host: ${RABBITMQ_VHOST:learnova}
 
     publisher-confirm-type: correlated
@@ -51,15 +52,18 @@ spring:
         prefetch: 10
         concurrency: 1
         max-concurrency: 5
-
         default-requeue-rejected: false
-
         retry:
           enabled: true
           max-attempts: 3
           initial-interval: 1000ms
           multiplier: 2.0
           max-interval: 10000ms
+
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
 
 learnova:
   rate-limit:
@@ -80,6 +84,10 @@ keycloak:
     client-secret: ${KEYCLOAK_ADMIN_CLIENT_SECRET:}
   sync-test-users:
     enabled: ${KEYCLOAK_SYNC_TEST_USERS:false}
+
+app:
+  mail:
+    from: ${APP_MAIL_FROM:noreply@learnova.local}
 
 springdoc:
   api-docs:

@@ -1,5 +1,8 @@
 
 services:
+  # =========================
+  # PostgreSQL
+  # =========================
   postgres:
     image: ${POSTGRES_IMAGE_NAME:-postgres}:${POSTGRES_IMAGE_VERSION:-18}
     container_name: learnova-postgres
@@ -27,6 +30,9 @@ services:
       retries: 10
       start_period: 10s
 
+  # =========================
+  # Keycloak
+  # =========================
   keycloak:
     image: ${KEYCLOAK_IMAGE_NAME:-quay.io/keycloak/keycloak}:${KEYCLOAK_IMAGE_VERSION:-26.4.7}
     container_name: learnova-keycloak
@@ -62,18 +68,72 @@ services:
       retries: 15
       start_period: 30s
 
+  # =========================
+  # Mailpit
+  # =========================
   mailpit:
     image: ${MAILPIT_IMAGE_NAME:-axllent/mailpit}:${MAILPIT_IMAGE_VERSION:-latest}
     container_name: learnova-mailpit
     restart: unless-stopped
+
     ports:
       - "${MAILPIT_SMTP_BIND_ADDRESS:-127.0.0.1}:${MAILPIT_SMTP_PORT:-1025}:1025"
       - "${MAILPIT_UI_BIND_ADDRESS:-127.0.0.1}:${MAILPIT_UI_PORT:-8025}:8025"
+
     environment:
       MP_MAX_MESSAGES: 500
 
+  # =========================
+  # RabbitMQ
+  # =========================
+  rabbitmq:
+    image: ${RABBITMQ_IMAGE_NAME:-rabbitmq}:${RABBITMQ_IMAGE_VERSION:-4-management}
+    container_name: learnova-rabbitmq
+    hostname: rabbitmq
+    restart: unless-stopped
+
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:?RABBITMQ_USER is required}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?RABBITMQ_PASSWORD is required}
+      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_VHOST:-learnova}
+
+    ports:
+      - "${RABBITMQ_AMQP_BIND_ADDRESS:-127.0.0.1}:${RABBITMQ_AMQP_PORT:-5672}:5672"
+      - "${RABBITMQ_UI_BIND_ADDRESS:-127.0.0.1}:${RABBITMQ_UI_PORT:-15672}:15672"
+
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  # =========================
+  # Redis
+  # =========================
+  redis:
+    image: ${REDIS_IMAGE_NAME:-redis}:${REDIS_IMAGE_VERSION:-7-alpine}
+    container_name: learnova-redis
+    restart: unless-stopped
+
+    ports:
+      - "${REDIS_BIND_ADDRESS:-127.0.0.1}:${REDIS_PORT:-6379}:6379"
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # =========================
+  # Learnova Backend
+  # =========================
   learnova-backend:
     image: ${LEARNOVA_BACKEND_IMAGE_NAME:-learnova-backend}:${LEARNOVA_BACKEND_IMAGE_VERSION:-local}
+
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -87,11 +147,16 @@ services:
     restart: unless-stopped
 
     environment:
+      # Spring
       SPRING_PROFILES_ACTIVE: docker
       SERVER_PORT: 8080
+
+      # PostgreSQL
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${DB_NAME:?DB_NAME is required}
       SPRING_DATASOURCE_USERNAME: ${DB_USER:?DB_USER is required}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+
+      # Keycloak
       KEYCLOAK_HOST: keycloak
       KEYCLOAK_PORT: 8080
       KEYCLOAK_REALM: ${KEYCLOAK_REALM:-learnova}
@@ -100,14 +165,28 @@ services:
       KEYCLOAK_SYNC_TEST_USERS: ${KEYCLOAK_SYNC_TEST_USERS:-true}
       KEYCLOAK_ISSUER_URI: ${KEYCLOAK_SCHEME:-http}://${KEYCLOAK_HOST:-localhost}:${KEYCLOAK_PORT:-8081}/realms/${KEYCLOAK_REALM:-learnova}
       KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/${KEYCLOAK_REALM:-learnova}/protocol/openid-connect/certs
+
+      # Mailpit
       MAIL_HOST: mailpit
       MAIL_PORT: 1025
+      APP_MAIL_FROM: ${APP_MAIL_FROM:-noreply@learnova.local}
+
+      # RabbitMQ
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+      RABBITMQ_VHOST: ${RABBITMQ_VHOST:-learnova}
+
+      # Redis
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+
+      # Rate limiting
       RATE_LIMIT_WINDOW: ${RATE_LIMIT_WINDOW:-1m}
       RATE_LIMIT_AUTHENTICATED_PER_MINUTE: ${RATE_LIMIT_AUTHENTICATED_PER_MINUTE:-100}
       RATE_LIMIT_PUBLIC_PER_MINUTE: ${RATE_LIMIT_PUBLIC_PER_MINUTE:-10}
       RATE_LIMIT_ANONYMOUS_PER_MINUTE: ${RATE_LIMIT_ANONYMOUS_PER_MINUTE:-60}
-      SPRING_DATA_REDIS_HOST: redis
-      SPRING_DATA_REDIS_PORT: 6379
 
     ports:
       - "${APP_BIND_ADDRESS:-127.0.0.1}:${APP_PORT:-8080}:8080"
@@ -124,41 +203,9 @@ services:
       redis:
         condition: service_healthy
 
-  rabbitmq:
-    image: ${RABBITMQ_IMAGE_NAME:-rabbitmq}:${RABBITMQ_IMAGE_VERSION:-4-management}
-    container_name: learnova-rabbitmq
-    restart: unless-stopped
-
-    environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:?RABBITMQ_USER is required}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?RABBITMQ_PASSWORD is required}
-      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_VHOST:-learnova}
-
-    ports:
-      - "${RABBITMQ_AMQP_BIND_ADDRESS:-127.0.0.1}:${RABBITMQ_AMQP_PORT:-5672}:5672"
-      - "${RABBITMQ_UI_BIND_ADDRESS:-127.0.0.1}:${RABBITMQ_UI_PORT:-15672}:15672"
-
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
-
-    healthcheck:
-      test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-
-  redis:
-    image: ${REDIS_IMAGE_NAME:-redis}:${REDIS_IMAGE_VERSION:-7-alpine}
-    container_name: learnova-redis
-    restart: unless-stopped
-    ports:
-      - "${REDIS_PORT:-6379}:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-
+# =========================
+# Persistent volumes
+# =========================
 volumes:
   postgres_data:
     name: learnova_postgres_data
