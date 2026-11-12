@@ -99,6 +99,24 @@ public class GlobalMessageHandler {
         return buildError(HttpStatus.CONFLICT, ex.getMessage(), request);
     }
 
+    @ExceptionHandler(EnrollmentNotFoundException.class)
+    public ResponseEntity<ApiError> handleEnrollmentNotFoundException(EnrollmentNotFoundException ex,
+            HttpServletRequest request) {
+        return buildError(HttpStatus.NOT_FOUND, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(DuplicateEnrollmentException.class)
+    public ResponseEntity<ApiError> handleDuplicateEnrollmentException(DuplicateEnrollmentException ex,
+            HttpServletRequest request) {
+        return buildError(HttpStatus.CONFLICT, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(InvalidEnrollmentStateException.class)
+    public ResponseEntity<ApiError> handleInvalidEnrollmentStateException(InvalidEnrollmentStateException ex,
+            HttpServletRequest request) {
+        return buildError(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
+    }
+
     private ResponseEntity<ApiError> buildError(HttpStatus httpStatus, String message, HttpServletRequest request) {
 
         ApiError error = new ApiError(Instant.now(), httpStatus.value(), httpStatus.getReasonPhrase(), message,
