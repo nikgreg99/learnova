@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 public class CourseTest {
 
     @Test
-    void shouldCreateCourseWithExpectedValues() {
+    void course_shouldCreateCourseWithExpectedValues() {
         Course course = new Course();
         course.setName("Java Fundamentals");
         course.setDescription("Introduction to Java");
