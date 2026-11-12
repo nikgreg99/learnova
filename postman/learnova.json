@@ -999,6 +999,164 @@
                     "response": []
                 }
             ]
+        },
+        {
+            "name": "Enrollments",
+            "item": [
+                {
+                    "name": "Enroll in course",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/courses/{{courseId}}/enrollments",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "courses",
+                                "{{courseId}}",
+                                "enrollments"
+                            ]
+                        },
+                        "description": "Enrolls the authenticated student into the specified course."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get course enrollments roster",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/courses/{{courseId}}/enrollments",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "courses",
+                                "{{courseId}}",
+                                "enrollments"
+                            ],
+                            "query": [
+                                {
+                                    "key": "status",
+                                    "value": "{{enrollmentStatus}}",
+                                    "description": "Optional status filter (ACTIVE, CANCELLED, COMPLETED)",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "0",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "size",
+                                    "value": "20",
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "description": "Retrieves the paginated list of enrollments for a course. Restricted to the course instructor and administrators."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get my enrollments",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/enrollments/me",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "enrollments",
+                                "me"
+                            ],
+                            "query": [
+                                {
+                                    "key": "status",
+                                    "value": "{{enrollmentStatus}}",
+                                    "description": "Optional status filter (ACTIVE, CANCELLED, COMPLETED)",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "0",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "size",
+                                    "value": "20",
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "description": "Retrieves paginated enrollments for the authenticated student."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get enrollment by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/enrollments/{{enrollmentId}}",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "enrollments",
+                                "{{enrollmentId}}"
+                            ]
+                        },
+                        "description": "Retrieves details of a specific enrollment. Accessible to the student, the course instructor, or an administrator."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Cancel enrollment",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/enrollments/{{enrollmentId}}",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "enrollments",
+                                "{{enrollmentId}}"
+                            ]
+                        },
+                        "description": "Cancels an active enrollment. Restricted to the enrolled student and administrators."
+                    },
+                    "response": []
+                }
+            ]
         }
     ],
     "auth": {
@@ -1153,6 +1311,14 @@
         {
             "key": "ratingReview",
             "value": "Excellent course with clear explanations and practical examples."
+        },
+        {
+            "key": "enrollmentId",
+            "value": "1"
+        },
+        {
+            "key": "enrollmentStatus",
+            "value": "ACTIVE"
         }
     ]
 }
