@@ -14,7 +14,6 @@ public interface LessonProgressRepository
         Long lessonId
     );
 
-
     List<LessonProgress>
     findAllByUser_IdAndLesson_Course_IdOrderByLesson_PositionAsc(
         Long userId,
