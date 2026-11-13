@@ -2,6 +2,8 @@ package com.learnova.repository;
 
 import com.learnova.model.Enrollment;
 import com.learnova.model.EnrollmentStatus;
+
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,4 +24,8 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
     Page<Enrollment> findByCourseId(Long courseId, Pageable pageable);
 
     Page<Enrollment> findByCourseIdAndStatus(Long courseId, EnrollmentStatus status, Pageable pageable);
+
+    boolean existsByStudentIdAndCourseIdAndStatus(Long studentId, Long courseId, EnrollmentStatus enrollmentStatus);
+
+    List<Enrollment> findByStudentIdAndStatus(Long id, EnrollmentStatus enrollmentStatus);
 }

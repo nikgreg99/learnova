@@ -1157,6 +1157,112 @@
                     "response": []
                 }
             ]
+        },
+        {
+            "name": "Lesson Progress",
+            "description": "Student lesson progress tracking. All requests inherit the collection-level OAuth 2.0 Authorization Code flow with PKCE (S256) and require a STUDENT account. The student identity is derived from the access token; no user ID is sent in requests.\n\nThe student must have an ACTIVE enrollment in the course. Supported statuses are NOT_STARTED, IN_PROGRESS, and COMPLETED. NOT_STARTED removes the stored progress record and is returned as the effective status for that lesson.",
+            "item": [
+                {
+                    "name": "Update lesson progress",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/lessons/{{lessonId}}/progress",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "lessons",
+                                "{{lessonId}}",
+                                "progress"
+                            ]
+                        },
+                        "description": "Creates or updates the authenticated student's progress for the lesson. Requires an ACTIVE enrollment in the lesson's course. Use COMPLETED to mark the lesson complete, IN_PROGRESS to resume it, or NOT_STARTED to reset it. When resetting to NOT_STARTED, the stored progress record is deleted. The completedAt field is cleared when moving away from COMPLETED.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"status\": \"{{progressStatus}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get course progress",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/courses/{{courseId}}/progress",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "courses",
+                                "{{courseId}}",
+                                "progress"
+                            ]
+                        },
+                        "description": "Returns progress for every lesson in the selected course for the authenticated student, including lessons without a stored progress record (NOT_STARTED). Includes totalLessons, completedLessons, inProgressLessons, notStartedLessons, completionPercentage, and the per-lesson progress list. Requires an ACTIVE enrollment."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get my progress across enrolled courses",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/users/me/progress",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "users",
+                                "me",
+                                "progress"
+                            ]
+                        },
+                        "description": "Returns the authenticated student's progress grouped by courses with ACTIVE enrollments. The response contains a courses array; each course includes its completion statistics and lesson progress. No user ID is required because the current user is resolved from the access token."
+                    },
+                    "response": []
+                }
+            ]
         }
     ],
     "auth": {
@@ -1319,6 +1425,11 @@
         {
             "key": "enrollmentStatus",
             "value": "ACTIVE"
+        },
+        {
+            "key": "progressStatus",
+            "value": "COMPLETED",
+            "type": "string"
         }
     ]
 }
