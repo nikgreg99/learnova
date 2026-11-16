@@ -1,6 +1,7 @@
 package com.learnova.controller;
 
 import com.learnova.dto.course.CoursePatchRequest;
+import com.learnova.dto.course.CourseReadinessResponse;
 import com.learnova.dto.course.CourseRequest;
 import com.learnova.dto.course.CourseResponse;
 import com.learnova.dto.course.CourseStatusUpdateRequest;
@@ -221,6 +222,11 @@ public class CourseController {
             responseCode = "404",
             description = "Course not found",
             content = @Content(schema = @Schema(implementation = ApiError.class))
+        ),
+        @ApiResponse(
+            responseCode = "409",
+            description = "Course conflict, e.g. cannot revert course to DRAFT while active enrollments exist",
+            content = @Content(schema = @Schema(implementation = ApiError.class))
         )
     })
     @PatchMapping("/{id}/status")
@@ -247,6 +253,43 @@ public class CourseController {
     }
 
     @Operation(
+        summary = "Check course publication readiness",
+        description = "Evaluates whether a course satisfies all requirements to be published"
+    )
+    @ApiResponses({
+        @ApiResponse(
+            responseCode = "200",
+            description = "Readiness check evaluated successfully"
+        ),
+        @ApiResponse(
+            responseCode = "403",
+            description = "User is not authorized to check readiness for this course",
+            content = @Content(schema = @Schema(implementation = ApiError.class))
+        ),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Course not found",
+            content = @Content(schema = @Schema(implementation = ApiError.class))
+        )
+    })
+    @GetMapping("/{id}/readiness")
+    @PreAuthorize(
+        "hasRole('ADMIN') or " +
+            "(hasRole('INSTRUCTOR') and @courseSecurityService.isOwner(#id))"
+    )
+    public ResponseEntity<CourseReadinessResponse> checkCourseReadiness(
+        @Parameter(
+            description = "Unique ID of the course to check readiness for",
+            example = "1",
+            required = true
+        )
+        @PathVariable Long id
+    ) {
+        var readiness = courseService.checkCourseReadiness(id);
+        return ResponseEntity.ok(readiness);
+    }
+
+    @Operation(
         summary = "Delete a course by ID",
         description = "Deletes a course from the catalog by its unique identifier"
     )
@@ -263,6 +306,11 @@ public class CourseController {
         @ApiResponse(
             responseCode = "404",
             description = "Course not found",
+            content = @Content(schema = @Schema(implementation = ApiError.class))
+        ),
+        @ApiResponse(
+            responseCode = "409",
+            description = "Course conflict, e.g. cannot delete course while active enrollments exist",
             content = @Content(schema = @Schema(implementation = ApiError.class))
         )
     })

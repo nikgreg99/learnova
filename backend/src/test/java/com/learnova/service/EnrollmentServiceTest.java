@@ -11,9 +11,11 @@ import com.learnova.dto.enrollment.EnrollmentResponse;
 import com.learnova.exception.CourseNotFoundException;
 import com.learnova.exception.DuplicateEnrollmentException;
 import com.learnova.exception.EnrollmentNotFoundException;
+import com.learnova.exception.InvalidCourseStateException;
 import com.learnova.exception.InvalidEnrollmentStateException;
 import com.learnova.mapper.EnrollmentMapper;
 import com.learnova.model.Course;
+import com.learnova.model.CourseStatus;
 import com.learnova.model.Enrollment;
 import com.learnova.model.EnrollmentStatus;
 import com.learnova.model.User;
@@ -103,6 +105,7 @@ class EnrollmentServiceTest {
         course.setId(COURSE_ID);
         course.setName("Spring Boot Microservices");
         course.setInstructor(instructor);
+        course.setStatus(CourseStatus.PUBLISHED);
 
         LocalDateTime now = LocalDateTime.now();
         enrollment = Enrollment.builder()
@@ -181,6 +184,24 @@ class EnrollmentServiceTest {
         when(enrollmentRepository.existsByStudentIdAndCourseId(STUDENT_ID, COURSE_ID)).thenReturn(true);
 
         assertThrows(DuplicateEnrollmentException.class, () -> enrollmentService.enrollStudent(COURSE_ID));
+    }
+
+    @Test
+    void enrollStudent_shouldThrowWhenCourseIsDraft() {
+        authenticate(STUDENT_KEYCLOAK_ID, "ROLE_STUDENT");
+        course.setStatus(CourseStatus.DRAFT);
+        when(courseRepository.findById(COURSE_ID)).thenReturn(Optional.of(course));
+
+        assertThrows(InvalidCourseStateException.class, () -> enrollmentService.enrollStudent(COURSE_ID));
+    }
+
+    @Test
+    void enrollStudent_shouldThrowWhenCourseIsArchived() {
+        authenticate(STUDENT_KEYCLOAK_ID, "ROLE_STUDENT");
+        course.setStatus(CourseStatus.ARCHIVED);
+        when(courseRepository.findById(COURSE_ID)).thenReturn(Optional.of(course));
+
+        assertThrows(InvalidCourseStateException.class, () -> enrollmentService.enrollStudent(COURSE_ID));
     }
 
     // ==================== Cancel Enrollment ====================

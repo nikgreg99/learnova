@@ -405,6 +405,68 @@
                     "response": []
                 },
                 {
+                    "name": "Update course status",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"status\": \"PUBLISHED\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/courses/{{courseId}}/status",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "courses",
+                                "{{courseId}}",
+                                "status"
+                            ]
+                        },
+                        "description": "Updates course publication status (DRAFT, PUBLISHED, ARCHIVED). Enforces readiness validation and active enrollment guards."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get course readiness",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/courses/{{courseId}}/readiness",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "courses",
+                                "{{courseId}}",
+                                "readiness"
+                            ]
+                        },
+                        "description": "Checks whether a course satisfies publication requirements (title, description, and at least one lesson). Requires course owner or ADMIN account."
+                    },
+                    "response": []
+                },
+                {
                     "name": "Delete course",
                     "request": {
                         "method": "DELETE",

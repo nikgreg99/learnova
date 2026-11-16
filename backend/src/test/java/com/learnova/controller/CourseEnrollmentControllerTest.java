@@ -16,6 +16,7 @@ import com.learnova.config.security.SecurityConfig;
 import com.learnova.dto.enrollment.EnrollmentResponse;
 import com.learnova.exception.CourseNotFoundException;
 import com.learnova.exception.DuplicateEnrollmentException;
+import com.learnova.exception.InvalidCourseStateException;
 import com.learnova.model.EnrollmentStatus;
 import com.learnova.service.EnrollmentService;
 import java.time.LocalDateTime;
@@ -126,6 +127,17 @@ class CourseEnrollmentControllerTest {
         mockMvc.perform(post("/api/v1/courses/{courseId}/enrollments", COURSE_ID)
                 .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_STUDENT"))))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void enroll_shouldReturn400WhenCourseNotPublished() throws Exception {
+        when(enrollmentService.enrollStudent(COURSE_ID))
+                .thenThrow(new InvalidCourseStateException("Cannot enroll in a course that is not published"));
+
+        mockMvc.perform(post("/api/v1/courses/{courseId}/enrollments", COURSE_ID)
+                .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_STUDENT"))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Cannot enroll in a course that is not published"));
     }
 
     @Test
