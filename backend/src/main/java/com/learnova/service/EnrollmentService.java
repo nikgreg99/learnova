@@ -5,10 +5,12 @@ import com.learnova.dto.enrollment.EnrollmentResponse;
 import com.learnova.exception.CourseNotFoundException;
 import com.learnova.exception.DuplicateEnrollmentException;
 import com.learnova.exception.EnrollmentNotFoundException;
+import com.learnova.exception.InvalidCourseStateException;
 import com.learnova.exception.InvalidEnrollmentStateException;
 import com.learnova.exception.KeycloakUserNotFoundException;
 import com.learnova.mapper.EnrollmentMapper;
 import com.learnova.model.Course;
+import com.learnova.model.CourseStatus;
 import com.learnova.model.Enrollment;
 import com.learnova.model.EnrollmentStatus;
 import com.learnova.model.User;
@@ -45,6 +47,10 @@ public class EnrollmentService {
     public EnrollmentResponse enrollStudent(Long courseId) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new CourseNotFoundException(courseId));
+
+        if (course.getStatus() != CourseStatus.PUBLISHED) {
+            throw new InvalidCourseStateException("Cannot enroll in a course that is not published");
+        }
 
         User student = getCurrentUser();
 

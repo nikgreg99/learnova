@@ -1,21 +1,29 @@
 package com.learnova.service;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import com.learnova.dto.course.CoursePatchRequest;
+import com.learnova.dto.course.CourseReadinessResponse;
 import com.learnova.dto.course.CourseRequest;
 import com.learnova.dto.course.CourseResponse;
+import com.learnova.exception.CourseConflictException;
 import com.learnova.exception.CourseNotFoundException;
+import com.learnova.exception.InvalidCourseStateException;
 import com.learnova.exception.KeycloakUserNotFoundException;
 import com.learnova.mapper.CourseMapper;
 import com.learnova.model.Course;
 import com.learnova.model.CourseStatus;
+import com.learnova.model.EnrollmentStatus;
+import com.learnova.model.Lesson;
 import com.learnova.model.User;
 import com.learnova.repository.CourseRepository;
+import com.learnova.repository.EnrollmentRepository;
 import com.learnova.repository.UserRepository;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.AfterEach;
@@ -41,6 +49,9 @@ class CourseServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private EnrollmentRepository enrollmentRepository;
 
     @InjectMocks
     private CourseService courseService;
@@ -96,7 +107,7 @@ class CourseServiceTest {
         CourseResponse secondResponse = new CourseResponse(2L, "Spring Boot Essentials", null, courseId,
                 "Learn Spring Boot", new BigDecimal("79.90"), null, null);
 
-        when(courseRepository.findAll()).thenReturn(List.of(course, secondCourse));
+        when(courseRepository.findByStatus(CourseStatus.PUBLISHED)).thenReturn(List.of(course, secondCourse));
         when(courseMapper.toResponse(course)).thenReturn(courseResponse);
         when(courseMapper.toResponse(secondCourse)).thenReturn(secondResponse);
 
@@ -105,20 +116,18 @@ class CourseServiceTest {
         assertEquals(2, result.size());
         assertEquals(List.of(courseResponse, secondResponse), result);
 
-        verify(courseRepository).findAll();
+        verify(courseRepository).findByStatus(CourseStatus.PUBLISHED);
         verify(courseMapper).toResponse(course);
         verify(courseMapper).toResponse(secondCourse);
     }
 
     @Test
     void shouldReturnEmptyListWhenNoCourseExists() {
-        when(courseRepository.findAll()).thenReturn(List.of());
-
+        when(courseRepository.findByStatus(CourseStatus.PUBLISHED)).thenReturn(List.of());
         var result = courseService.getCourses();
 
         assertTrue(result.isEmpty());
-
-        verify(courseRepository).findAll();
+        verify(courseRepository).findByStatus(CourseStatus.PUBLISHED);
         verifyNoInteractions(courseMapper);
     }
 
@@ -290,11 +299,25 @@ class CourseServiceTest {
     @Test
     void shouldDeleteCourseWhenCourseExists() {
         when(courseRepository.existsById(courseId)).thenReturn(true);
+        when(enrollmentRepository.existsByCourseIdAndStatus(courseId, EnrollmentStatus.ACTIVE)).thenReturn(false);
 
         assertDoesNotThrow(() -> courseService.deleteCourseById(courseId));
 
         verify(courseRepository).existsById(courseId);
+        verify(enrollmentRepository).existsByCourseIdAndStatus(courseId, EnrollmentStatus.ACTIVE);
         verify(courseRepository).deleteById(courseId);
+    }
+
+    @Test
+    void deleteCourseById_shouldThrowWhenActiveEnrollmentsExist() {
+        when(courseRepository.existsById(courseId)).thenReturn(true);
+        when(enrollmentRepository.existsByCourseIdAndStatus(courseId, EnrollmentStatus.ACTIVE)).thenReturn(true);
+
+        assertThrows(CourseConflictException.class, () -> courseService.deleteCourseById(courseId));
+
+        verify(courseRepository).existsById(courseId);
+        verify(enrollmentRepository).existsByCourseIdAndStatus(courseId, EnrollmentStatus.ACTIVE);
+        verify(courseRepository, never()).deleteById(any());
     }
 
     @Test
@@ -357,6 +380,11 @@ class CourseServiceTest {
 
     @Test
     void shouldUpdateCourseStatusWhenCourseExists() {
+        Lesson lesson = new Lesson();
+        lesson.setId(1L);
+        lesson.setTitle("Intro Lesson");
+        course.setLessons(new ArrayList<>(List.of(lesson)));
+
         when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
         when(courseRepository.save(course)).thenReturn(course);
         when(courseMapper.toResponse(course)).thenReturn(courseResponse);
@@ -367,5 +395,153 @@ class CourseServiceTest {
         assertEquals(courseResponse, result.get());
         assertEquals(CourseStatus.PUBLISHED, course.getStatus());
         verify(courseRepository).save(course);
+    }
+
+    @Test
+    void updateCourseStatus_shouldReturnCurrentStatusWhenStatusIsUnchanged() {
+        course.setStatus(CourseStatus.DRAFT);
+        when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+        when(courseMapper.toResponse(course)).thenReturn(courseResponse);
+
+        var result = courseService.updateCourseStatus(courseId, CourseStatus.DRAFT);
+
+        assertTrue(result.isPresent());
+        assertEquals(courseResponse, result.get());
+        verify(courseRepository, never()).save(any());
+    }
+
+    @Test
+    void updateCourseStatus_shouldThrowWhenPublishingDraftWithoutLessons() {
+        course.setStatus(CourseStatus.DRAFT);
+        course.setLessons(new ArrayList<>());
+        when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+
+        InvalidCourseStateException exception = assertThrows(InvalidCourseStateException.class,
+                () -> courseService.updateCourseStatus(courseId, CourseStatus.PUBLISHED));
+
+        assertTrue(exception.getMessage().contains("Course must contain at least one lesson"));
+        verify(courseRepository, never()).save(any());
+    }
+
+    @Test
+    void updateCourseStatus_shouldThrowWhenPublishingDraftWithoutName() {
+        course.setStatus(CourseStatus.DRAFT);
+        course.setName("");
+        Lesson lesson = new Lesson();
+        lesson.setId(1L);
+        course.setLessons(new ArrayList<>(List.of(lesson)));
+        when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+
+        InvalidCourseStateException exception = assertThrows(InvalidCourseStateException.class,
+                () -> courseService.updateCourseStatus(courseId, CourseStatus.PUBLISHED));
+
+        assertTrue(exception.getMessage().contains("Course name is required"));
+        verify(courseRepository, never()).save(any());
+    }
+
+    @Test
+    void updateCourseStatus_shouldThrowWhenPublishingDraftWithoutDescription() {
+        course.setStatus(CourseStatus.DRAFT);
+        course.setDescription("");
+        Lesson lesson = new Lesson();
+        lesson.setId(1L);
+        course.setLessons(new ArrayList<>(List.of(lesson)));
+        when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+
+        InvalidCourseStateException exception = assertThrows(InvalidCourseStateException.class,
+                () -> courseService.updateCourseStatus(courseId, CourseStatus.PUBLISHED));
+
+        assertTrue(exception.getMessage().contains("Course description is required"));
+        verify(courseRepository, never()).save(any());
+    }
+
+    @Test
+    void updateCourseStatus_shouldThrowWhenRevertingPublishedToDraftWithActiveEnrollments() {
+        course.setStatus(CourseStatus.PUBLISHED);
+        when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+        when(enrollmentRepository.existsByCourseIdAndStatus(courseId, EnrollmentStatus.ACTIVE)).thenReturn(true);
+
+        CourseConflictException exception = assertThrows(CourseConflictException.class,
+                () -> courseService.updateCourseStatus(courseId, CourseStatus.DRAFT));
+
+        assertTrue(exception.getMessage().contains("Cannot revert course to DRAFT while active enrollments exist"));
+        verify(courseRepository, never()).save(any());
+    }
+
+    @Test
+    void updateCourseStatus_shouldRevertPublishedToDraftWhenNoActiveEnrollments() {
+        course.setStatus(CourseStatus.PUBLISHED);
+        when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+        when(enrollmentRepository.existsByCourseIdAndStatus(courseId, EnrollmentStatus.ACTIVE)).thenReturn(false);
+        when(courseRepository.save(course)).thenReturn(course);
+        when(courseMapper.toResponse(course)).thenReturn(courseResponse);
+
+        var result = courseService.updateCourseStatus(courseId, CourseStatus.DRAFT);
+
+        assertTrue(result.isPresent());
+        assertEquals(CourseStatus.DRAFT, course.getStatus());
+        verify(courseRepository).save(course);
+    }
+
+    @Test
+    void updateCourseStatus_shouldThrowWhenArchivedToDraft() {
+        course.setStatus(CourseStatus.ARCHIVED);
+        when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+
+        InvalidCourseStateException exception = assertThrows(InvalidCourseStateException.class,
+                () -> courseService.updateCourseStatus(courseId, CourseStatus.DRAFT));
+
+        assertTrue(exception.getMessage().contains("Archived course cannot be reverted directly to DRAFT"));
+        verify(courseRepository, never()).save(any());
+    }
+
+    @Test
+    void updateCourseStatus_shouldAllowArchivedToPublished() {
+        course.setStatus(CourseStatus.ARCHIVED);
+        when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+        when(courseRepository.save(course)).thenReturn(course);
+        when(courseMapper.toResponse(course)).thenReturn(courseResponse);
+
+        var result = courseService.updateCourseStatus(courseId, CourseStatus.PUBLISHED);
+
+        assertTrue(result.isPresent());
+        assertEquals(CourseStatus.PUBLISHED, course.getStatus());
+        verify(courseRepository).save(course);
+    }
+
+    @Test
+    void checkCourseReadiness_shouldReturnNotReadyWhenRequirementsMissing() {
+        course.setName("");
+        course.setDescription("");
+        course.setLessons(new ArrayList<>());
+        when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+
+        CourseReadinessResponse response = courseService.checkCourseReadiness(courseId);
+
+        assertFalse(response.ready());
+        assertEquals(3, response.reasons().size());
+        assertTrue(response.reasons().contains("Course name is required"));
+        assertTrue(response.reasons().contains("Course description is required"));
+        assertTrue(response.reasons().contains("Course must contain at least one lesson"));
+    }
+
+    @Test
+    void checkCourseReadiness_shouldReturnReadyWhenValid() {
+        Lesson lesson = new Lesson();
+        lesson.setId(1L);
+        course.setLessons(new ArrayList<>(List.of(lesson)));
+        when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+
+        CourseReadinessResponse response = courseService.checkCourseReadiness(courseId);
+
+        assertTrue(response.ready());
+        assertTrue(response.reasons().isEmpty());
+    }
+
+    @Test
+    void checkCourseReadiness_shouldThrowWhenCourseNotFound() {
+        when(courseRepository.findById(courseId)).thenReturn(Optional.empty());
+
+        assertThrows(CourseNotFoundException.class, () -> courseService.checkCourseReadiness(courseId));
     }
 }

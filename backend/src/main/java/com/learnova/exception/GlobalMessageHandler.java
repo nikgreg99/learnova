@@ -111,8 +111,20 @@ public class GlobalMessageHandler {
         return buildError(HttpStatus.CONFLICT, ex.getMessage(), request);
     }
 
+    @ExceptionHandler(CourseConflictException.class)
+    public ResponseEntity<ApiError> handleCourseConflictException(CourseConflictException ex,
+            HttpServletRequest request) {
+        return buildError(HttpStatus.CONFLICT, ex.getMessage(), request);
+    }
+
     @ExceptionHandler(InvalidEnrollmentStateException.class)
     public ResponseEntity<ApiError> handleInvalidEnrollmentStateException(InvalidEnrollmentStateException ex,
+            HttpServletRequest request) {
+        return buildError(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(InvalidCourseStateException.class)
+    public ResponseEntity<ApiError> handleInvalidCourseStateException(InvalidCourseStateException ex,
             HttpServletRequest request) {
         return buildError(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
     }
