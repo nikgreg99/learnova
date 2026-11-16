@@ -117,11 +117,19 @@ public class GlobalMessageHandler {
         return buildError(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
     }
 
-    private ResponseEntity<ApiError> buildError(HttpStatus httpStatus, String message, HttpServletRequest request) {
+    @ExceptionHandler(AttachmentNotFoundException.class)
 
+    public ResponseEntity<ApiError> handleAttachmentNotFoundException(AttachmentNotFoundException ex,
+                                                                      HttpServletRequest request) {
+        String message = messageSource.getMessage("attachment.not-found", new Object[]{
+            ex.getAttachmentId()
+        }, request.getLocale());
+        return buildError(HttpStatus.NOT_FOUND, ex.getMessage(), request);
+    }
+
+    private ResponseEntity<ApiError> buildError(HttpStatus httpStatus, String message, HttpServletRequest request) {
         ApiError error = new ApiError(Instant.now(), httpStatus.value(), httpStatus.getReasonPhrase(), message,
                 request.getRequestURI());
-
         return ResponseEntity.status(httpStatus.value()).body(error);
     }
 }
