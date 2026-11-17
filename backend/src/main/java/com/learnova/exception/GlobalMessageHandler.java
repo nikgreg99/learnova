@@ -155,6 +155,49 @@ public class GlobalMessageHandler {
         return buildError(HttpStatus.BAD_REQUEST, message, request);
     }
 
+    @ExceptionHandler(QuizNotFoundException.class)
+    public ResponseEntity<ApiError> handleQuizNotFoundException(QuizNotFoundException ex, HttpServletRequest request) {
+        String message = this.messageSource.getMessage("quiz.not-found", new Object[]{
+                ex.getQuizId()
+        }, request.getLocale());
+        return buildError(HttpStatus.NOT_FOUND, message, request);
+    }
+
+    @ExceptionHandler(QuestionNotFoundException.class)
+    public ResponseEntity<ApiError> handleQuestionNotFoundException(QuestionNotFoundException ex,
+            HttpServletRequest request) {
+        String message = this.messageSource.getMessage("question.not-found", new Object[]{
+                ex.getQuestionId()
+        }, request.getLocale());
+        return buildError(HttpStatus.NOT_FOUND, message, request);
+    }
+
+    @ExceptionHandler(QuizAttemptNotFoundException.class)
+    public ResponseEntity<ApiError> handleQuizAttemptNotFoundException(QuizAttemptNotFoundException ex,
+            HttpServletRequest request) {
+        String message = this.messageSource.getMessage("quiz-attempt.not-found", new Object[]{
+                ex.getAttemptId()
+        }, request.getLocale());
+        return buildError(HttpStatus.NOT_FOUND, message, request);
+    }
+
+    @ExceptionHandler(InvalidQuizStateException.class)
+    public ResponseEntity<ApiError> handleInvalidQuizStateException(InvalidQuizStateException ex,
+            HttpServletRequest request) {
+        String message = this.messageSource.getMessage("quiz.invalid-state", new Object[]{
+                ex.getReason()
+        }, ex.getReason(), request.getLocale());
+        return buildError(HttpStatus.BAD_REQUEST, message, request);
+    }
+
+    @ExceptionHandler(QuizConflictException.class)
+    public ResponseEntity<ApiError> handleQuizConflictException(QuizConflictException ex, HttpServletRequest request) {
+        String message = this.messageSource.getMessage("quiz.conflict", new Object[]{
+                ex.getReason()
+        }, ex.getReason(), request.getLocale());
+        return buildError(HttpStatus.CONFLICT, message, request);
+    }
+
     private ResponseEntity<ApiError> buildError(HttpStatus httpStatus, String message, HttpServletRequest request) {
 
         ApiError error = new ApiError(Instant.now(), httpStatus.value(), httpStatus.getReasonPhrase(), message,
