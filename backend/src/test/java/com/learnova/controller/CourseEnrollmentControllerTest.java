@@ -15,7 +15,7 @@ import com.learnova.config.ratelimit.RateLimitInterceptor;
 import com.learnova.config.security.SecurityConfig;
 import com.learnova.dto.enrollment.EnrollmentResponse;
 import com.learnova.exception.CourseNotFoundException;
-import com.learnova.exception.DuplicateEnrollmentException;
+import com.learnova.exception.EnrollmentConflictException;
 import com.learnova.exception.InvalidCourseStateException;
 import com.learnova.model.EnrollmentStatus;
 import com.learnova.service.EnrollmentService;
@@ -111,7 +111,7 @@ class CourseEnrollmentControllerTest {
     @Test
     void enroll_shouldReturn409WhenDuplicateEnrollment() throws Exception {
         when(enrollmentService.enrollStudent(COURSE_ID))
-                .thenThrow(new DuplicateEnrollmentException("Student is already enrolled in this course"));
+                .thenThrow(new EnrollmentConflictException("Student is already enrolled in this course"));
 
         mockMvc.perform(post("/api/v1/courses/{courseId}/enrollments", COURSE_ID)
                 .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_STUDENT"))))

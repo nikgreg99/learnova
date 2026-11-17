@@ -13,9 +13,9 @@ import com.learnova.dto.rating.RatingRequest;
 import com.learnova.dto.rating.RatingResponse;
 import com.learnova.dto.rating.RatingSummaryResponse;
 import com.learnova.exception.CourseNotFoundException;
-import com.learnova.exception.DuplicateRatingException;
 import com.learnova.exception.KeycloakUserNotFoundException;
 import com.learnova.exception.LessonNotFoundException;
+import com.learnova.exception.RatingConflictException;
 import com.learnova.exception.RatingNotFoundException;
 import com.learnova.mapper.RatingMapper;
 import com.learnova.model.Course;
@@ -147,14 +147,14 @@ class RatingServiceTest {
     }
 
     @Test
-    void createCourseRating_shouldThrowDuplicateRatingExceptionWhenUserAlreadyRated() {
+    void createCourseRating_shouldThrowRatingConflictExceptionWhenUserAlreadyRated() {
         authenticate();
 
         when(courseRepository.findById(COURSE_ID)).thenReturn(Optional.of(course));
         when(userRepository.findByKeycloakId(KEYCLOAK_ID)).thenReturn(Optional.of(user));
         when(ratingRepository.existsByUserIdAndCourseId(USER_ID, COURSE_ID)).thenReturn(true);
 
-        assertThrows(DuplicateRatingException.class, () -> ratingService.createCourseRating(COURSE_ID, request));
+        assertThrows(RatingConflictException.class, () -> ratingService.createCourseRating(COURSE_ID, request));
 
         verify(ratingRepository, never()).save(any());
     }
@@ -298,14 +298,14 @@ class RatingServiceTest {
     }
 
     @Test
-    void createLessonRating_shouldThrowDuplicateRatingException() {
+    void createLessonRating_shouldThrowRatingConflictException() {
         authenticate();
 
         when(lessonRepository.findById(LESSON_ID)).thenReturn(Optional.of(lesson));
         when(userRepository.findByKeycloakId(KEYCLOAK_ID)).thenReturn(Optional.of(user));
         when(ratingRepository.existsByUserIdAndLessonId(USER_ID, LESSON_ID)).thenReturn(true);
 
-        assertThrows(DuplicateRatingException.class, () -> ratingService.createLessonRating(LESSON_ID, request));
+        assertThrows(RatingConflictException.class, () -> ratingService.createLessonRating(LESSON_ID, request));
     }
 
     @Test

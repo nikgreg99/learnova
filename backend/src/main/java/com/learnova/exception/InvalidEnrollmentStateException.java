@@ -1,8 +1,14 @@
 package com.learnova.exception;
 
+import lombok.Getter;
+
+@Getter
 public class InvalidEnrollmentStateException extends RuntimeException {
 
-    public InvalidEnrollmentStateException(String message) {
-        super(message);
+    private final String reason;
+
+    public InvalidEnrollmentStateException(String reason) {
+        super(reason);
+        this.reason = reason;
     }
 }

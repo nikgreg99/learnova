@@ -3,7 +3,7 @@ package com.learnova.service;
 import com.learnova.config.security.SecurityUtils;
 import com.learnova.dto.enrollment.EnrollmentResponse;
 import com.learnova.exception.CourseNotFoundException;
-import com.learnova.exception.DuplicateEnrollmentException;
+import com.learnova.exception.EnrollmentConflictException;
 import com.learnova.exception.EnrollmentNotFoundException;
 import com.learnova.exception.InvalidCourseStateException;
 import com.learnova.exception.InvalidEnrollmentStateException;
@@ -55,7 +55,7 @@ public class EnrollmentService {
         User student = getCurrentUser();
 
         if (enrollmentRepository.existsByStudentIdAndCourseId(student.getId(), courseId)) {
-            throw new DuplicateEnrollmentException("Student is already enrolled in this course");
+            throw new EnrollmentConflictException("Student is already enrolled in this course");
         }
 
         Enrollment enrollment = Enrollment.builder()
@@ -70,7 +70,7 @@ public class EnrollmentService {
 
     public EnrollmentResponse cancelEnrollment(Long enrollmentId) {
         Enrollment enrollment = enrollmentRepository.findById(enrollmentId)
-                .orElseThrow(() -> new EnrollmentNotFoundException("Enrollment not found with id: " + enrollmentId));
+                .orElseThrow(() -> new EnrollmentNotFoundException(enrollmentId));
 
         User currentUser = getCurrentUser();
         boolean isAdmin = hasRole("ROLE_ADMIN");
@@ -132,7 +132,7 @@ public class EnrollmentService {
     @Transactional(readOnly = true)
     public EnrollmentResponse getEnrollmentById(Long enrollmentId) {
         Enrollment enrollment = enrollmentRepository.findById(enrollmentId)
-                .orElseThrow(() -> new EnrollmentNotFoundException("Enrollment not found with id: " + enrollmentId));
+                .orElseThrow(() -> new EnrollmentNotFoundException(enrollmentId));
 
         User currentUser = getCurrentUser();
         boolean isAdmin = hasRole("ROLE_ADMIN");

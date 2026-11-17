@@ -9,7 +9,7 @@ import static org.mockito.Mockito.when;
 
 import com.learnova.dto.enrollment.EnrollmentResponse;
 import com.learnova.exception.CourseNotFoundException;
-import com.learnova.exception.DuplicateEnrollmentException;
+import com.learnova.exception.EnrollmentConflictException;
 import com.learnova.exception.EnrollmentNotFoundException;
 import com.learnova.exception.InvalidCourseStateException;
 import com.learnova.exception.InvalidEnrollmentStateException;
@@ -183,7 +183,7 @@ class EnrollmentServiceTest {
         when(userRepository.findByKeycloakId(STUDENT_KEYCLOAK_ID)).thenReturn(Optional.of(student));
         when(enrollmentRepository.existsByStudentIdAndCourseId(STUDENT_ID, COURSE_ID)).thenReturn(true);
 
-        assertThrows(DuplicateEnrollmentException.class, () -> enrollmentService.enrollStudent(COURSE_ID));
+        assertThrows(EnrollmentConflictException.class, () -> enrollmentService.enrollStudent(COURSE_ID));
     }
 
     @Test

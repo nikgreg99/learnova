@@ -5,10 +5,10 @@ import lombok.Getter;
 @Getter
 public class RatingNotFoundException extends RuntimeException {
 
-    private final String message;
+    private final String reason;
 
-    public RatingNotFoundException(String message) {
-        super(message);
-        this.message = message;
+    public RatingNotFoundException(String reason) {
+        super(reason);
+        this.reason = reason;
     }
 }
