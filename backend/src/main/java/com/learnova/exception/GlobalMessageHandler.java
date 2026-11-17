@@ -90,43 +90,69 @@ public class GlobalMessageHandler {
     @ExceptionHandler(RatingNotFoundException.class)
     public ResponseEntity<ApiError> handleRatingNotFoundException(RatingNotFoundException ex,
             HttpServletRequest request) {
-        return buildError(HttpStatus.NOT_FOUND, ex.getMessage(), request);
+        String message = messageSource.getMessage("rating.not-found", new Object[]{
+                ex.getReason()
+        }, ex.getReason(), request.getLocale());
+        return buildError(HttpStatus.NOT_FOUND, message, request);
     }
 
-    @ExceptionHandler(DuplicateRatingException.class)
-    public ResponseEntity<ApiError> handleDuplicateRatingException(DuplicateRatingException ex,
+    @ExceptionHandler(RatingConflictException.class)
+    public ResponseEntity<ApiError> handleRatingConflictException(RatingConflictException ex,
             HttpServletRequest request) {
-        return buildError(HttpStatus.CONFLICT, ex.getMessage(), request);
+        String message = messageSource.getMessage("rating.conflict", new Object[]{
+                ex.getReason()
+        }, ex.getReason(), request.getLocale());
+        return buildError(HttpStatus.CONFLICT, message, request);
     }
 
     @ExceptionHandler(EnrollmentNotFoundException.class)
     public ResponseEntity<ApiError> handleEnrollmentNotFoundException(EnrollmentNotFoundException ex,
             HttpServletRequest request) {
-        return buildError(HttpStatus.NOT_FOUND, ex.getMessage(), request);
+        String message;
+        if (ex.getEnrollmentId() != null) {
+            message = messageSource.getMessage("enrollment.not-found", new Object[]{
+                    ex.getEnrollmentId()
+            }, ex.getMessage(), request.getLocale());
+        } else {
+            message = ex.getMessage();
+        }
+        return buildError(HttpStatus.NOT_FOUND, message, request);
     }
 
-    @ExceptionHandler(DuplicateEnrollmentException.class)
-    public ResponseEntity<ApiError> handleDuplicateEnrollmentException(DuplicateEnrollmentException ex,
+    @ExceptionHandler(EnrollmentConflictException.class)
+    public ResponseEntity<ApiError> handleEnrollmentConflictException(EnrollmentConflictException ex,
             HttpServletRequest request) {
-        return buildError(HttpStatus.CONFLICT, ex.getMessage(), request);
+        String message = messageSource.getMessage("enrollment.conflict", new Object[]{
+                ex.getReason()
+        }, ex.getReason(), request.getLocale());
+        return buildError(HttpStatus.CONFLICT, message, request);
     }
 
     @ExceptionHandler(CourseConflictException.class)
     public ResponseEntity<ApiError> handleCourseConflictException(CourseConflictException ex,
             HttpServletRequest request) {
-        return buildError(HttpStatus.CONFLICT, ex.getMessage(), request);
+        String message = messageSource.getMessage("course.conflict", new Object[]{
+                ex.getReason()
+        }, ex.getReason(), request.getLocale());
+        return buildError(HttpStatus.CONFLICT, message, request);
     }
 
     @ExceptionHandler(InvalidEnrollmentStateException.class)
     public ResponseEntity<ApiError> handleInvalidEnrollmentStateException(InvalidEnrollmentStateException ex,
             HttpServletRequest request) {
-        return buildError(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
+        String message = messageSource.getMessage("enrollment.invalid-state", new Object[]{
+                ex.getReason()
+        }, ex.getReason(), request.getLocale());
+        return buildError(HttpStatus.BAD_REQUEST, message, request);
     }
 
     @ExceptionHandler(InvalidCourseStateException.class)
     public ResponseEntity<ApiError> handleInvalidCourseStateException(InvalidCourseStateException ex,
             HttpServletRequest request) {
-        return buildError(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
+        String message = messageSource.getMessage("course.invalid-state", new Object[]{
+                ex.getReason()
+        }, ex.getReason(), request.getLocale());
+        return buildError(HttpStatus.BAD_REQUEST, message, request);
     }
 
     private ResponseEntity<ApiError> buildError(HttpStatus httpStatus, String message, HttpServletRequest request) {

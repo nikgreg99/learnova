@@ -5,9 +5,9 @@ import com.learnova.dto.rating.RatingRequest;
 import com.learnova.dto.rating.RatingResponse;
 import com.learnova.dto.rating.RatingSummaryResponse;
 import com.learnova.exception.CourseNotFoundException;
-import com.learnova.exception.DuplicateRatingException;
 import com.learnova.exception.KeycloakUserNotFoundException;
 import com.learnova.exception.LessonNotFoundException;
+import com.learnova.exception.RatingConflictException;
 import com.learnova.exception.RatingNotFoundException;
 import com.learnova.mapper.RatingMapper;
 import com.learnova.model.Course;
@@ -47,7 +47,7 @@ public class RatingService {
         User user = getCurrentUser();
 
         if (ratingRepository.existsByUserIdAndCourseId(user.getId(), courseId)) {
-            throw new DuplicateRatingException("User has already submitted a rating for this course");
+            throw new RatingConflictException("User has already submitted a rating for this course");
         }
 
         Rating rating = ratingMapper.toEntity(request);
@@ -117,7 +117,7 @@ public class RatingService {
         User user = getCurrentUser();
 
         if (ratingRepository.existsByUserIdAndLessonId(user.getId(), lessonId)) {
-            throw new DuplicateRatingException("User has already submitted a rating for this lesson");
+            throw new RatingConflictException("User has already submitted a rating for this lesson");
         }
 
         Rating rating = ratingMapper.toEntity(request);
