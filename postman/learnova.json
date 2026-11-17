@@ -1325,6 +1325,485 @@
                     "response": []
                 }
             ]
+        },
+        {
+            "name": "Quizzes",
+            "description": "Quiz and assessment management and student attempt evaluation. Instructors can manage quizzes and questions for their courses. Enrolled students can fetch zero-leak take views, start attempts, submit answers, and receive automated scoring.",
+            "item": [
+                {
+                    "name": "Create a quiz for a course",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"title\": \"Java Core Fundamentals Quiz\",\n    \"description\": \"Assess core Java concepts including OOP, collections, and polymorphism.\",\n    \"passingScore\": 75,\n    \"maxAttempts\": 3,\n    \"timeLimitMinutes\": 30,\n    \"isActive\": true\n}"
+                        },
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/courses/{{courseId}}/quizzes",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "courses",
+                                "{{courseId}}",
+                                "quizzes"
+                            ]
+                        },
+                        "description": "Creates a new quiz within a course. Requires INSTRUCTOR course ownership or ADMIN."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get all quizzes for a course",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/courses/{{courseId}}/quizzes",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "courses",
+                                "{{courseId}}",
+                                "quizzes"
+                            ]
+                        },
+                        "description": "Retrieves all quizzes for a course. Students view active quizzes; instructors/admins view all."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get quiz by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/quizzes/{{quizId}}",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "quizzes",
+                                "{{quizId}}"
+                            ]
+                        },
+                        "description": "Retrieves full quiz details including questions and correct answer options (Instructor view)."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update quiz",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"title\": \"Java Core Fundamentals Quiz (Updated)\",\n    \"description\": \"Updated assessment criteria and time limit.\",\n    \"passingScore\": 80,\n    \"maxAttempts\": 2,\n    \"timeLimitMinutes\": 25,\n    \"isActive\": true\n}"
+                        },
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/quizzes/{{quizId}}",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "quizzes",
+                                "{{quizId}}"
+                            ]
+                        },
+                        "description": "Updates all metadata fields of an existing quiz. Requires instructor ownership."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Partially update quiz",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"passingScore\": 85\n}"
+                        },
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/quizzes/{{quizId}}",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "quizzes",
+                                "{{quizId}}"
+                            ]
+                        },
+                        "description": "Partially updates selected fields of an existing quiz. Requires instructor ownership."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete quiz",
+                    "request": {
+                        "method": "DELETE",
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/quizzes/{{quizId}}",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "quizzes",
+                                "{{quizId}}"
+                            ]
+                        },
+                        "description": "Deletes a quiz and cascade-deletes all associated questions and attempts."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Add question to quiz",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"text\": \"Which of the following is true about Java interfaces?\",\n    \"type\": \"SINGLE_CHOICE\",\n    \"points\": 5,\n    \"position\": 1,\n    \"options\": [\n        {\n            \"text\": \"A class can implement multiple interfaces\",\n            \"isCorrect\": true,\n            \"position\": 1\n        },\n        {\n            \"text\": \"Interfaces can have mutable instance variables\",\n            \"isCorrect\": false,\n            \"position\": 2\n        },\n        {\n            \"text\": \"Interfaces cannot have default methods\",\n            \"isCorrect\": false,\n            \"position\": 3\n        }\n    ]\n}"
+                        },
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/quizzes/{{quizId}}/questions",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "quizzes",
+                                "{{quizId}}",
+                                "questions"
+                            ]
+                        },
+                        "description": "Creates a question with answer options in the quiz. Requires instructor ownership."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update question in quiz",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"text\": \"Which of the following are Java primitive types? (Select all that apply)\",\n    \"type\": \"MULTIPLE_CHOICE\",\n    \"points\": 10,\n    \"position\": 1,\n    \"options\": [\n        {\n            \"text\": \"int\",\n            \"isCorrect\": true,\n            \"position\": 1\n        },\n        {\n            \"text\": \"boolean\",\n            \"isCorrect\": true,\n            \"position\": 2\n        },\n        {\n            \"text\": \"String\",\n            \"isCorrect\": false,\n            \"position\": 3\n        }\n    ]\n}"
+                        },
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/quizzes/{{quizId}}/questions/{{questionId}}",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "quizzes",
+                                "{{quizId}}",
+                                "questions",
+                                "{{questionId}}"
+                            ]
+                        },
+                        "description": "Updates an existing question and its answer options within a quiz."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete question from quiz",
+                    "request": {
+                        "method": "DELETE",
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/quizzes/{{quizId}}/questions/{{questionId}}",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "quizzes",
+                                "{{quizId}}",
+                                "questions",
+                                "{{questionId}}"
+                            ]
+                        },
+                        "description": "Deletes a question and its answer options from the quiz."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get quiz for taking (Student zero-leak view)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/quizzes/{{quizId}}/take",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "quizzes",
+                                "{{quizId}}",
+                                "take"
+                            ]
+                        },
+                        "description": "Returns quiz questions and options without answer keys. Requires ACTIVE enrollment in the course."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Start quiz attempt",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/quizzes/{{quizId}}/attempts",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "quizzes",
+                                "{{quizId}}",
+                                "attempts"
+                            ]
+                        },
+                        "description": "Starts an in-progress quiz attempt, checks attempt limits and timers. Requires ACTIVE enrollment."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Submit quiz attempt answers",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"answers\": [\n        {\n            \"questionId\": 1,\n            \"selectedOptionIds\": [\n                1\n            ]\n        },\n        {\n            \"questionId\": 2,\n            \"selectedOptionIds\": [\n                3,\n                4\n            ]\n        }\n    ]\n}"
+                        },
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/quizzes/{{quizId}}/attempts/{{attemptId}}/submit",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "quizzes",
+                                "{{quizId}}",
+                                "attempts",
+                                "{{attemptId}}",
+                                "submit"
+                            ]
+                        },
+                        "description": "Submits student answers, executes auto-grading engine, and computes pass/fail score."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get student quiz attempts",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/quizzes/{{quizId}}/attempts",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "quizzes",
+                                "{{quizId}}",
+                                "attempts"
+                            ]
+                        },
+                        "description": "Retrieves past attempts for the authenticated student on this quiz."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get quiz attempt details",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/quizzes/{{quizId}}/attempts/{{attemptId}}",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "quizzes",
+                                "{{quizId}}",
+                                "attempts",
+                                "{{attemptId}}"
+                            ]
+                        },
+                        "description": "Retrieves score, status, and answer review for a specific attempt."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get all attempts for quiz (Instructor view)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/quizzes/{{quizId}}/attempts/all",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "quizzes",
+                                "{{quizId}}",
+                                "attempts",
+                                "all"
+                            ]
+                        },
+                        "description": "Retrieves all student attempts for this quiz. Requires instructor course ownership or ADMIN."
+                    },
+                    "response": []
+                }
+            ]
         }
     ],
     "auth": {
@@ -1492,6 +1971,18 @@
             "key": "progressStatus",
             "value": "COMPLETED",
             "type": "string"
+        },
+        {
+            "key": "quizId",
+            "value": "1"
+        },
+        {
+            "key": "questionId",
+            "value": "1"
+        },
+        {
+            "key": "attemptId",
+            "value": "1"
         }
     ]
 }
