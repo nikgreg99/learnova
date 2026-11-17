@@ -15,5 +15,5 @@ public record QuestionRequest(
         @Schema(description = "Question type", example = "SINGLE_CHOICE") @NotNull QuestionType type,
         @Schema(description = "Point value for this question", example = "1") @NotNull @Min(1) Integer points,
         @Schema(description = "Sequence position of the question (1-based)", example = "1") @NotNull @Min(1) Integer position,
-        @Schema(description = "List of answer options") @NotEmpty @Valid List<AnswerOptionRequest> options) {
+        @Schema(description = "List of answer options") @NotEmpty List<@Valid AnswerOptionRequest> options) {
 }

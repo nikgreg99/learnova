@@ -7,5 +7,5 @@ import java.util.List;
 
 @Schema(description = "Request payload for submitting answers to a quiz attempt")
 public record QuizAttemptSubmitRequest(
-        @Schema(description = "List of answers submitted for each question") @NotNull @Valid List<QuestionAnswerSubmission> answers) {
+        @Schema(description = "List of answers submitted for each question") @NotNull List<@Valid QuestionAnswerSubmission> answers) {
 }
