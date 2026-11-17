@@ -637,6 +637,211 @@
             "description": "Lesson management for a specific course.\n\nReading lessons requires authentication and an authorized role. Creating, updating, partially updating, and deleting lessons require ownership of the parent course or ADMIN privileges."
         },
         {
+            "name": "Attachments",
+            "description": "Upload, list, download, and delete course or lesson attachments. Uploads require INSTRUCTOR or ADMIN privileges. Listing and downloading are available to STUDENT, INSTRUCTOR, and ADMIN roles, subject to the authorization rules enforced by the backend. Deletion is subject to attachment ownership or administrator permissions.",
+            "item": [
+                {
+                    "name": "Upload course attachment",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "file",
+                                    "type": "file",
+                                    "src": []
+                                },
+                                {
+                                    "key": "courseId",
+                                    "value": "{{courseId}}",
+                                    "type": "text"
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/attachments",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "attachments"
+                            ]
+                        },
+                        "description": "Uploads a file associated with a course. Select a local file in the form-data field named 'file'. Requires INSTRUCTOR or ADMIN. Do not manually set Content-Type: Postman must generate the multipart boundary."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Upload lesson attachment",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "file",
+                                    "type": "file",
+                                    "src": []
+                                },
+                                {
+                                    "key": "lessonId",
+                                    "value": "{{lessonId}}",
+                                    "type": "text"
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/attachments",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "attachments"
+                            ]
+                        },
+                        "description": "Uploads a file associated with a lesson. Select a local file in the form-data field named 'file'. Requires INSTRUCTOR or ADMIN. Do not manually set Content-Type: Postman must generate the multipart boundary."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get course attachments",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/attachments/courses/{{courseId}}",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "attachments",
+                                "courses",
+                                "{{courseId}}"
+                            ]
+                        },
+                        "description": "Returns the attachments associated with the specified course. Requires an authenticated STUDENT, INSTRUCTOR, or ADMIN account."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get lesson attachments",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/attachments/lessons/{{lessonId}}",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "attachments",
+                                "lessons",
+                                "{{lessonId}}"
+                            ]
+                        },
+                        "description": "Returns the attachments associated with the specified lesson. Requires an authenticated STUDENT, INSTRUCTOR, or ADMIN account."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Download attachment",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "*/*"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/attachments/{{attachmentId}}/download",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "attachments",
+                                "{{attachmentId}}",
+                                "download"
+                            ]
+                        },
+                        "description": "Downloads the attachment binary content. Requires an authenticated STUDENT, INSTRUCTOR, or ADMIN account and any additional resource-level authorization enforced by the backend."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete attachment",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "*/*"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{proto}}://{{host}}:{{port}}/api/{{version}}/attachments/{{attachmentId}}",
+                            "protocol": "{{proto}}",
+                            "host": [
+                                "{{host}}"
+                            ],
+                            "port": "{{port}}",
+                            "path": [
+                                "api",
+                                "{{version}}",
+                                "attachments",
+                                "{{attachmentId}}"
+                            ]
+                        },
+                        "description": "Deletes the attachment metadata and, after the database transaction commits, its object in MinIO. The backend checks attachment ownership or ADMIN permissions."
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
             "name": "Course Ratings",
             "description": "Course rating and review operations.\n\nAllows authenticated users (STUDENT, INSTRUCTOR, ADMIN) to submit ratings (1-5) and optional reviews for courses, retrieve rating summaries, and manage their own reviews.",
             "item": [
@@ -1429,6 +1634,11 @@
         {
             "key": "progressStatus",
             "value": "COMPLETED",
+            "type": "string"
+        },
+        {
+            "key": "attachmentId",
+            "value": "1",
             "type": "string"
         }
     ]
